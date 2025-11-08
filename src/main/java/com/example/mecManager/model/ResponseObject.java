@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ResponseObject {
-    private String status;
+    private Integer status;
     private String message;
     private Object data;
 }
