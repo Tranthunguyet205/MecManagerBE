@@ -11,10 +11,16 @@ public class AppConstants {
         public static final Integer BAD_REQUEST = 400;
         public static final Integer ACTIVE = 1;// trang thai hoat dong user
         public static final Integer INACTIVE = 0;// trang thai hoat dong user
+        public static final Integer ALREADY_EXISTS = 3;
     }
 
     public static class ROLE{
         public static final Integer DOCTOR = 1;
         public static final Integer ADMIN = 2;
+    }
+
+    public static class URL{
+        public static final String IMG_URL = "https://i.ibb.co/FL5DXK4f/avatar-trang-4.jpg";
+        public static final String API_URL = "/apiMecManager";
     }
 }

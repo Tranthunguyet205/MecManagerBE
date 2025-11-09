@@ -22,10 +22,12 @@ public class JwtUtils {
                 .setSubject(String.valueOf(user.getId()))
                 .claim("username", user.getUsername())
                 .claim("role", user.getRole())
+                .claim("fullName", user.getFullName())
                 .claim("profilePictureUrl", user.getProfilePictureUrl())
                 .claim("isActive", user.getIsActive())
                 .claim("createdAt",user.getCreatedAt())
                 .claim("updatedAt",  user.getUpdatedAt())
+                .claim("gender", user.getGender())
 
                 .setIssuedAt(new Date()) // Ngày phát hành token
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // Hạn token

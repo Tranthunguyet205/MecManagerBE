@@ -24,26 +24,19 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public ResponseObject register(UserDTO user) {
+    public ResponseObject register(User user) {
         Optional<User> userOptional = userRepository.findByUsername(user.getUsername());
         if(userOptional.isPresent()) {
             DocInfo docInfo = docInfoRepository.findByUserId(userOptional.get().getId());
         }
 
-        if(userOptional.isPresent() || userOptional2.isPresent()) {
-            return new ResponseObject(MessageConstants.FAILED, MessageConstants.THAT_BAI, null);
+        if(userOptional.isPresent()) {
+            return new ResponseObject(AppConstants.STATUS.ALREADY_EXISTS, "Tài khoản đã tồn tại", null);
         }
         user.setIsActive(AppConstants.STATUS.ACTIVE);
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-        user.setRole(user.getRoleId());
-        user.setProfilePictureUrl("");
-        user.setPhoneNumber(user.getPhoneNumber());
-        user.setProfilePictureUrl("https://i.ibb.co/FL5DXK4f/avatar-trang-4.jpg");
-        PriestProfile priestProfile = new PriestProfile();
+        user.setProfilePictureUrl(AppConstants.URL.IMG_URL);
         User user1 = userRepository.save(user);
-        priestProfile.setUser(user1);
-        priestProfile.setCreatedAt(new Date());
-        priestProfileService.createProfile(priestProfile);
         return new ResponseObject(AppConstants.STATUS.SUCCESS, "Đăng ký thành công!", user1);
     }
 
@@ -67,6 +60,17 @@ public class UserServiceImpl implements UserService {
 
         String token = jwtUtils.generateToken(user);
         return new ResponseObject(AppConstants.STATUS.SUCCESS, "Đăng nhập thành công", token);
+    }
+
+    @Override
+    public ResponseObject getUserById(Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if(userOptional.isPresent()) {
+            User user = userOptional.get();
+            return new ResponseObject(AppConstants.STATUS.SUCCESS, "Truy xuất user có id: " + user.getId() + " thành công.", user);
+        }else{
+            return new ResponseObject(AppConstants.STATUS.NOT_FOUND, " User không tồn tại ", null);
+        }
     }
 
 }

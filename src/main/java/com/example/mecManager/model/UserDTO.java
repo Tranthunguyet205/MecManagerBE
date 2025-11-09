@@ -14,7 +14,7 @@ public class UserDTO {
 
     private String fullName;
 
-    private String passwordHash;
+    private String password;
 
     private Integer gender;
 
