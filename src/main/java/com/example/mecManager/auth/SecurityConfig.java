@@ -1,5 +1,6 @@
 package com.example.mecManager.auth;
 
+import com.example.mecManager.Common.AppConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -25,7 +26,7 @@ public class SecurityConfig {
         return http.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/apiMecManager/user/login", "/apiMecManager/user/register", "/ws/**")
+                        .requestMatchers(AppConstants.URL.API_URL+"/user/login", AppConstants.URL.API_URL+"/user/register", "/ws/**")
                     
                         .permitAll()
                         .anyRequest().authenticated())
