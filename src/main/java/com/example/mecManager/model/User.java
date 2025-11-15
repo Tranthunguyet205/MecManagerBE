@@ -29,7 +29,7 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(nullable = false, name="gender")
+    @Column(nullable = true, name="gender")
     private Integer gender;
 
     @ManyToOne(fetch = FetchType.EAGER)
