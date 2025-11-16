@@ -2,11 +2,15 @@ package com.example.mecManager.service;
 
 import com.example.mecManager.Common.AppConstants;
 import com.example.mecManager.model.Prescription;
+import com.example.mecManager.model.PrescriptionDTO;
+import com.example.mecManager.model.PrescriptionResDTO;
 import com.example.mecManager.model.ResponseObject;
 import com.example.mecManager.repository.PrescriptionRepository;
+import com.example.mecManager.repository.PrescriptionRepositoryJdbc;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -14,6 +18,7 @@ import java.util.Optional;
 public class PrescriptionServiceImpl implements PrescriptionService {
 
     private final PrescriptionRepository prescriptionRepository;
+    private final PrescriptionRepositoryJdbc prescriptionRepositoryJdbc;
 
     @Override
     public ResponseObject getPrescriptionByCode(String code) {
@@ -32,6 +37,16 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             return new ResponseObject(AppConstants.STATUS.SUCCESS,"", prescription.get());
         }else {
             return new ResponseObject(AppConstants.STATUS.NOT_FOUND,"", null);
+        }
+    }
+
+    @Override
+    public ResponseObject findByDTO(PrescriptionDTO prescriptionDTO) {
+        try{
+            PrescriptionResDTO prescriptionDTOList = prescriptionRepositoryJdbc.findPrescriptionsByDTO(prescriptionDTO);
+            return new ResponseObject(AppConstants.STATUS.SUCCESS,"Tìm kiếm đơn thuốc thành công", prescriptionDTOList);
+        }catch (Exception e){
+            return new ResponseObject(AppConstants.STATUS.BAD_REQUEST,"Có lỗi dữ liệu truyền vào", null);
         }
     }
 }

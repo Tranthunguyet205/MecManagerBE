@@ -21,7 +21,7 @@ public class JwtUtils {
         return Jwts.builder()
                 .setSubject(String.valueOf(user.getId()))
                 .claim("username", user.getUsername())
-                .claim("role", user.getRole())
+                .claim("role", user.getRole().getName())
                 .claim("fullName", user.getFullName())
                 .claim("profilePictureUrl", user.getProfilePictureUrl())
                 .claim("isActive", user.getIsActive())
@@ -44,9 +44,17 @@ public class JwtUtils {
                 .get("role", String.class);
     }
 
-    public Boolean extractIsActive(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().get("isActive", Boolean.class);
+    public boolean extractIsActive(String token) {
+        Integer active = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("isActive", Integer.class);
+
+        return active != null && active == 1; // 1 = true, 0 = false
     }
+
 
 
     public String extractUsername(String token) {

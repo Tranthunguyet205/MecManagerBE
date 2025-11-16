@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
         user.setIsActive(AppConstants.STATUS.ACTIVE);
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         user.setProfilePictureUrl(AppConstants.URL.IMG_URL);
-        user.setGender(1);
+        user.setGender(AppConstants.GENDER.OTHER);
         User user1 = userRepository.save(user);
         return new ResponseObject(AppConstants.STATUS.SUCCESS, "Đăng ký thành công!", user1);
     }

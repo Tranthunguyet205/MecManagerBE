@@ -29,6 +29,11 @@ public class SecurityConfig {
                         .requestMatchers(AppConstants.URL.API_URL+"/user/login", AppConstants.URL.API_URL+"/user/register", "/ws/**")
                     
                         .permitAll()
+                        // Prescription chỉ ADMIN + DOCTOR được truy cập
+                        .requestMatchers("/apiMecManager/prescription/**")
+                        .hasAnyAuthority("ADMIN", "DOCTOR")
+
+
                         .anyRequest().authenticated())
                 
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

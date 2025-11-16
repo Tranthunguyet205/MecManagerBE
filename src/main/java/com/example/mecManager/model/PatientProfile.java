@@ -35,7 +35,7 @@ public class PatientProfile {
     private String note;
 
     @Column(name = "treatment_type", nullable = false)
-    private Integer treatmentType;// loai dieu tri
+    private Integer treatmentType;// loai dieu tri 0: Ngoại trú, 1: Nội trú
 
     @Column(name = "height_cm", nullable = false)
     private float heightCm;

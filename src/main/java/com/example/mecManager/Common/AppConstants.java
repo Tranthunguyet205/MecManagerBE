@@ -23,4 +23,10 @@ public class AppConstants {
         public static final String IMG_URL = "https://i.ibb.co/FL5DXK4f/avatar-trang-4.jpg";
         public static final String API_URL = "/apiMecManager";
     }
+
+    public static class GENDER{
+        public static final Integer MALE = 1;
+        public static final Integer FEMALE = 2;
+        public static final Integer OTHER = 3;
+    }
 }
