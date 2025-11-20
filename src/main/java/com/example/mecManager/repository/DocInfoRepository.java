@@ -11,5 +11,11 @@ public interface DocInfoRepository extends JpaRepository<DocInfo, Long> {
 
     @Query("select di from DocInfo di where di.user.id = :userId")
     DocInfo findByUserId( @Param("userId") Long userId );
+    
+    @Query("SELECT d FROM DocInfo d WHERE d.practiceCertificateNo = :practiceCertificateNo")
+    DocInfo findByPracticeCertificateNo(@Param("practiceCertificateNo") String practiceCertificateNo);
+    
+    @Query("SELECT d FROM DocInfo d WHERE d.licenseNo = :licenseNo")
+    DocInfo findByLicenseNo(@Param("licenseNo") String licenseNo);
 
 }

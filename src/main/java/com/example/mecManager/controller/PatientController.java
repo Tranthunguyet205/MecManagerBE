@@ -52,4 +52,28 @@ public class PatientController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseObject);
         }
     }
+
+    /**
+     * Delete patient by ID
+     * @param patientId - ID of the patient to delete
+     * @param deletedBy - ID of the user performing the deletion
+     * @return Response object with deletion status
+     */
+    @DeleteMapping("/delete/{patientId}")
+    public ResponseEntity<ResponseObject> deletePatient(
+            @PathVariable Long patientId,
+            @RequestParam Long deletedBy) {
+        
+        ResponseObject responseObject = patientService.deletePatient(patientId, deletedBy);
+        
+        if (responseObject.getStatus().equals(AppConstants.STATUS.SUCCESS)) {
+            return ResponseEntity.status(HttpStatus.OK).body(responseObject);
+        } else if (responseObject.getStatus().equals(AppConstants.STATUS.NOT_FOUND)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseObject);
+        } else if (responseObject.getStatus().equals(AppConstants.STATUS.BAD_REQUEST)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseObject);
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseObject);
+        }
+    }
 }
