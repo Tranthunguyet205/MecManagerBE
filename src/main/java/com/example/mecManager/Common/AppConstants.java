@@ -15,13 +15,27 @@ public class AppConstants {
     }
 
     public static class ROLE{
-        public static final Integer DOCTOR = 1;
-        public static final Integer ADMIN = 2;
+        public static final String DOCTOR = "DOCTOR";
+        public static final String ADMIN = "ADMIN";
     }
 
     public static class URL{
         public static final String IMG_URL = "https://i.ibb.co/FL5DXK4f/avatar-trang-4.jpg";
         public static final String API_URL = "/apiMecManager";
+
+        public static final String[] ALL_URLS = {
+                API_URL + "/prescription/**",
+                API_URL + "/patient/**",
+                API_URL + "/medicine/**",
+                API_URL + "/doctor/**",
+        };
+
+        public static final String[] PUBLIC_URLS = {
+                API_URL + "/user/login",
+                API_URL + "/user/register",
+                "/ws/**"
+        };
+
     }
 
     public static class GENDER{
@@ -29,4 +43,5 @@ public class AppConstants {
         public static final Integer FEMALE = 2;
         public static final Integer OTHER = 3;
     }
+
 }
