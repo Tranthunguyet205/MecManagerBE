@@ -26,12 +26,12 @@ public class SecurityConfig {
         return http.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(AppConstants.URL.API_URL+"/user/login", AppConstants.URL.API_URL+"/user/register", "/ws/**")
+                        .requestMatchers(AppConstants.URL.PUBLIC_URLS)
                     
                         .permitAll()
                         // Prescription chỉ ADMIN + DOCTOR được truy cập
-                        .requestMatchers("/apiMecManager/prescription/**")
-                        .hasAnyAuthority("ADMIN", "DOCTOR")
+                        .requestMatchers(AppConstants.URL.ALL_URLS)
+                        .hasAnyAuthority(AppConstants.ROLE.ADMIN, AppConstants.ROLE.DOCTOR)
 
 
                         .anyRequest().authenticated())
