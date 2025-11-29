@@ -1,6 +1,7 @@
 package com.example.mecManager.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,8 +10,10 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class DocInfoDTO {
-    private Long userId;
+  private Long id;
+  private Long userId;
     private String fullName;
     private Date dob;
     private String phone;
@@ -25,4 +28,7 @@ public class DocInfoDTO {
     private String licenseNo;
     private Date licenseIssueDate;
     private String licenseIssuePlace;
+    private Date createdAt;
+    private Date updatedAt;
 }
+

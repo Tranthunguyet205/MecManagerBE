@@ -1,15 +1,15 @@
 package com.example.mecManager.repository;
 
-import com.example.mecManager.model.Prescription;
-import com.example.mecManager.model.PrescriptionDTO;
-import com.example.mecManager.model.PrescriptionResDTO;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.example.mecManager.model.PrescriptionDTO;
+import com.example.mecManager.model.PrescriptionResDTO;
 
 @Service
 public class PrescriptionRepositoryJdbcImpl implements PrescriptionRepositoryJdbc {
@@ -52,32 +52,28 @@ public class PrescriptionRepositoryJdbcImpl implements PrescriptionRepositoryJdb
             params.add(dto.getCreateDateTime() + " 23:59:59");
         }
 
-
         // ===== PAGING =====
-        int page = dto.getPage() != null ? dto.getPage() : 1;
+        int page = dto.getPage() != null ? dto.getPage() : 0;
         int pageSize = dto.getPageSize() != null ? dto.getPageSize() : 10;
 
-        int offset = (page - 1) * pageSize;
+        int offset = page * pageSize;
 
         query.append(" LIMIT ? OFFSET ? ");
         params.add(pageSize);
         params.add(offset);
 
-        List<PrescriptionDTO> rows =  jdbcTemplate.query(
+        List<PrescriptionDTO> rows = jdbcTemplate.query(
                 query.toString(),
                 params.toArray(),
-                new BeanPropertyRowMapper<>(PrescriptionDTO.class)
-        );
+                new BeanPropertyRowMapper<>(PrescriptionDTO.class));
 
         Long total = rows.isEmpty() ? 0 : rows.get(0).getTotal();
 
         PrescriptionResDTO result = new PrescriptionResDTO();
-        result.setPrescriptionDTO(rows);
+        result.setPrescriptionDTOList(rows);
         result.setTotal(total);
 
         return result;
-
-
 
     }
 

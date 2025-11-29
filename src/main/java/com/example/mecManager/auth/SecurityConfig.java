@@ -18,7 +18,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter)
@@ -26,16 +26,13 @@ public class SecurityConfig {
         return http.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
+                        // Public endpoints - no authentication required
                         .requestMatchers(AppConstants.URL.PUBLIC_URLS)
-                    
                         .permitAll()
-                        // Prescription chỉ ADMIN + DOCTOR được truy cập
-                        .requestMatchers(AppConstants.URL.ALL_URLS)
-                        .hasAnyAuthority(AppConstants.ROLE.ADMIN, AppConstants.ROLE.DOCTOR)
-
-
+                        // All other endpoints - authentication required
+                        // Role-based authorization is handled by @PreAuthorize on controllers
                         .anyRequest().authenticated())
-                
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
@@ -48,7 +45,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:5173", "http://localhost:3000" ));
+        configuration.setAllowedOrigins(
+                Arrays.asList("http://localhost:4200", "http://localhost:5173", "http://localhost:3000"));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));

@@ -1,77 +1,125 @@
 package com.example.mecManager.service;
 
-import com.example.mecManager.Common.AppConstants;
-import com.example.mecManager.auth.JwtUtils;
-import com.example.mecManager.model.*;
-import com.example.mecManager.repository.DocInfoRepository;
-import com.example.mecManager.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Date;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.Objects;
-import java.util.Optional;
+import com.example.mecManager.Common.AppConstants;
+import com.example.mecManager.Common.enums.RoleEnum;
+import com.example.mecManager.auth.JwtUtils;
+import com.example.mecManager.model.LoginRequest;
+import com.example.mecManager.model.LoginResponse;
+import com.example.mecManager.model.RegisterRequest;
+import com.example.mecManager.model.User;
+import com.example.mecManager.model.UserResponse;
+import com.example.mecManager.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final DocInfoRepository docInfoRepository;
     private final JwtUtils jwtUtils;
 
-
     @Override
-    public ResponseObject register(User user) {
-        Optional<User> userOptional = userRepository.findByUsername(user.getUsername());
-        if(userOptional.isPresent()) {
-            DocInfo docInfo = docInfoRepository.findByUserId(userOptional.get().getId());
+    public UserResponse register(RegisterRequest request) {
+        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+            throw new RuntimeException("Tên đăng nhập không được để trống");
         }
 
-        if(userOptional.isPresent()) {
-            return new ResponseObject(AppConstants.STATUS.ALREADY_EXISTS, "Tài khoản đã tồn tại", null);
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            throw new RuntimeException("Mật khẩu không được để trống");
         }
-        user.setIsActive(AppConstants.STATUS.ACTIVE);
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Họ và tên không được để trống");
+        }
+
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email không được để trống");
+        }
+
+        String username = request.getUsername().trim().toLowerCase();
+        String email = request.getEmail().trim().toLowerCase();
+
+        if (userRepository.findByUsername(username).isPresent()) {
+            throw new RuntimeException("Tên đăng nhập này đã được sử dụng. Vui lòng chọn tên khác.");
+        }
+
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("Email này đã được đăng ký. Vui lòng sử dụng email khác.");
+        }
+
+        RoleEnum role = (request.getRole() != null) ? request.getRole() : RoleEnum.DOCTOR;
+
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setFullName(request.getFullName().trim());
+        user.setEmail(email);
+        user.setPhone(request.getPhone());
+        user.setRole(role);
+        user.setIsActive(true);
         user.setProfilePictureUrl(AppConstants.URL.IMG_URL);
         user.setGender(AppConstants.GENDER.OTHER);
-        User user1 = userRepository.save(user);
-        return new ResponseObject(AppConstants.STATUS.SUCCESS, "Đăng ký thành công!", user1);
+        user.setCreatedAt(new Date());
+
+        User savedUser = userRepository.save(user);
+
+        return mapToUserResponse(savedUser);
     }
 
     @Override
-    public ResponseObject login(String username, String password) {
-        Optional<User> userOptional = userRepository.findByUsername(username);
+    public LoginResponse login(LoginRequest request) {
+        User user = userRepository.findByUsername(request.getUsername().toLowerCase())
+                .orElseThrow(() -> new RuntimeException("Tên đăng nhập hoặc mật khẩu không chính xác"));
 
-        if (userOptional.isEmpty()) {
-            return new ResponseObject(AppConstants.STATUS.NOT_FOUND, "Tài khoản không tồn tại", null);
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không chính xác");
         }
 
-        User user = userOptional.get();
-
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            return new ResponseObject(AppConstants.STATUS.UNAUTHORIZED, "Mật khẩu không đúng", null);
-        }
-
-        if (Objects.equals(user.getIsActive(), AppConstants.STATUS.INACTIVE)) { // nếu có trường trạng thái
-            return new ResponseObject(AppConstants.STATUS.ERROR, "Tài khoản đã bị khóa", null);
+        if (!user.getIsActive()) {
+            throw new RuntimeException("Tài khoản chưa được phê duyệt. Vui lòng liên hệ admin.");
         }
 
         String token = jwtUtils.generateToken(user);
-        return new ResponseObject(AppConstants.STATUS.SUCCESS, "Đăng nhập thành công", token);
+        UserResponse userResponse = mapToUserResponse(user);
+
+        return LoginResponse.builder()
+                .accessToken(token)
+                .tokenType("Bearer")
+                .expiresIn(86400L) // 24 hours in seconds
+                .user(userResponse)
+                .build();
     }
 
     @Override
-    public ResponseObject getUserById(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        if(userOptional.isPresent()) {
-            User user = userOptional.get();
-            return new ResponseObject(AppConstants.STATUS.SUCCESS, "Truy xuất user có id: " + user.getId() + " thành công.", user);
-        }else{
-            return new ResponseObject(AppConstants.STATUS.NOT_FOUND, " User không tồn tại ", null);
-        }
+    @Transactional(readOnly = true)
+    public UserResponse getUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        return mapToUserResponse(user);
     }
 
+    private UserResponse mapToUserResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .gender(user.getGender())
+                .role(user.getRole().name())
+                .isActive(user.getIsActive())
+                .profilePictureUrl(user.getProfilePictureUrl())
+                .createdAt(user.getCreatedAt())
+                .build();
+    }
 }

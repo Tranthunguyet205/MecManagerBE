@@ -1,30 +1,32 @@
 package com.example.mecManager.service;
 
-import com.example.mecManager.Common.AppConstants;
-import com.example.mecManager.model.DocInfo;
-import com.example.mecManager.model.DocInfoDTO;
-import com.example.mecManager.model.Prescription;
-import com.example.mecManager.model.ResponseObject;
-import com.example.mecManager.model.User;
-import com.example.mecManager.repository.DocInfoRepository;
-import com.example.mecManager.repository.PrescriptionRepository;
-import com.example.mecManager.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.mecManager.model.DocInfo;
+import com.example.mecManager.model.DocInfoDTO;
+import com.example.mecManager.model.User;
+import com.example.mecManager.model.UserPrincipal;
+import com.example.mecManager.repository.DocInfoRepository;
+import com.example.mecManager.repository.PrescriptionRepository;
+import com.example.mecManager.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class DoctorServiceImpl implements DoctorService {
 
     private final DocInfoRepository docInfoRepository;
@@ -32,30 +34,25 @@ public class DoctorServiceImpl implements DoctorService {
     private final PrescriptionRepository prescriptionRepository;
 
     @Override
-    @Transactional
-    public ResponseObject createDoctorInfo(DocInfoDTO docInfoDTO, Long createdBy) {
+    public DocInfoDTO createDoctor(DocInfoDTO docInfoDTO) {
         try {
-            // Validate user exists
-            Optional<User> userOptional = userRepository.findById(docInfoDTO.getUserId());
-            if (!userOptional.isPresent()) {
-                return new ResponseObject(AppConstants.STATUS.NOT_FOUND, "User not found", null);
-            }
+            // Get current authenticated user
+            Long createdBy = getCurrentUserId();
 
-            User user = userOptional.get();
+            // Validate user exists
+            User user = userRepository
+                    .findById(docInfoDTO.getUserId())
+                    .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
             // Check if doctor info already exists for this user
-            DocInfo existingDocInfo = docInfoRepository.findByUserId(docInfoDTO.getUserId());
-            if (existingDocInfo != null) {
-                return new ResponseObject(AppConstants.STATUS.ALREADY_EXISTS, "Doctor information already exists for this user", null);
+            if (docInfoRepository.findByUserId(docInfoDTO.getUserId()) != null) {
+                throw new RuntimeException("Thông tin bác sĩ đã tồn tại cho người dùng này");
             }
 
-            // Validate creator exists
-            Optional<User> creatorOptional = userRepository.findById(createdBy);
-            if (!creatorOptional.isPresent()) {
-                return new ResponseObject(AppConstants.STATUS.NOT_FOUND, "Creator user not found", null);
-            }
-
-            User creator = creatorOptional.get();
+            // Get creator
+            User creator = userRepository
+                    .findById(createdBy)
+                    .orElseThrow(() -> new RuntimeException("Người tạo không tồn tại"));
 
             // Create new DocInfo
             DocInfo docInfo = new DocInfo();
@@ -78,139 +75,165 @@ public class DoctorServiceImpl implements DoctorService {
             docInfo.setUserCreateBy(creator);
 
             DocInfo savedDocInfo = docInfoRepository.save(docInfo);
-
-            return new ResponseObject(AppConstants.STATUS.SUCCESS, "Doctor information created successfully", savedDocInfo);
+            return mapToDTO(savedDocInfo);
 
         } catch (Exception e) {
-            return new ResponseObject(AppConstants.STATUS.ERROR, "Error creating doctor information: " + e.getMessage(), null);
+            throw new RuntimeException("Lỗi tạo thông tin bác sĩ: " + e.getMessage());
         }
     }
 
     @Override
-    public ResponseObject getDoctorById(Long doctorId) {
-        try {
-            Optional<DocInfo> doctorOptional = docInfoRepository.findById(doctorId);
-            
-            if (!doctorOptional.isPresent()) {
-                return new ResponseObject(AppConstants.STATUS.NOT_FOUND, 
-                    "Không tìm thấy bác sĩ với ID: " + doctorId, null);
-            }
+    @Transactional(readOnly = true)
+    public DocInfoDTO getDoctorById(Long id) {
+        DocInfo doctor = docInfoRepository
+                .findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ với ID: " + id));
+        return mapToDTO(doctor);
+    }
 
-            DocInfo doctor = doctorOptional.get();
-            
-            return new ResponseObject(AppConstants.STATUS.SUCCESS, 
-                "Lấy thông tin bác sĩ thành công", doctor);
+    @Override
+    @Transactional(readOnly = true)
+    public Object getAllDoctors(Integer page, Integer pageSize) {
+        int pageNum = page != null && page >= 0 ? page : 0;
+        int size = pageSize != null && pageSize > 0 ? pageSize : 10;
+
+        Pageable pageable = PageRequest.of(pageNum, size, Sort.by("createdAt").descending());
+        Page<DocInfo> doctorPage = docInfoRepository.findAll(pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", doctorPage.getContent().stream().map(this::mapToDTO).toList());
+        response.put("page", doctorPage.getNumber());
+        response.put("size", doctorPage.getSize());
+        response.put("totalElements", doctorPage.getTotalElements());
+        response.put("totalPages", doctorPage.getTotalPages());
+        response.put("isFirst", doctorPage.isFirst());
+        response.put("isLast", doctorPage.isLast());
+
+        return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Object searchDoctors(
+            String practiceCertificateNo, String licenseNo, Integer page, Integer pageSize) {
+        // Search by practice certificate number
+        if (practiceCertificateNo != null && !practiceCertificateNo.trim().isEmpty()) {
+            DocInfo doctor = docInfoRepository.findByPracticeCertificateNo(practiceCertificateNo.trim());
+            if (doctor == null) {
+                throw new RuntimeException("Không tìm thấy bác sĩ với chứng chỉ: " + practiceCertificateNo);
+            }
+            return mapToDTO(doctor);
+        }
+
+        // Search by license number
+        if (licenseNo != null && !licenseNo.trim().isEmpty()) {
+            DocInfo doctor = docInfoRepository.findByLicenseNo(licenseNo.trim());
+            if (doctor == null) {
+                throw new RuntimeException("Không tìm thấy bác sĩ với giấy phép: " + licenseNo);
+            }
+            return mapToDTO(doctor);
+        }
+
+        // If no search criteria, return all doctors
+        return getAllDoctors(page, pageSize);
+    }
+
+    @Override
+    public DocInfoDTO updateDoctor(Long id, DocInfoDTO docInfoDTO) {
+        try {
+            DocInfo doctor = docInfoRepository
+                    .findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ với ID: " + id));
+
+            Long updatedBy = getCurrentUserId();
+            User updater = userRepository
+                    .findById(updatedBy)
+                    .orElseThrow(() -> new RuntimeException("Người cập nhật không tồn tại"));
+
+            // Update fields
+            doctor.setFullName(docInfoDTO.getFullName());
+            doctor.setDob(docInfoDTO.getDob());
+            doctor.setPhone(docInfoDTO.getPhone());
+            doctor.setCccd(docInfoDTO.getCccd());
+            doctor.setCccdIssueDate(docInfoDTO.getCccdIssueDate());
+            doctor.setCccdIssuePlace(docInfoDTO.getCccdIssuePlace());
+            doctor.setCurrentAddress(docInfoDTO.getCurrentAddress());
+            doctor.setEmail(docInfoDTO.getEmail());
+            doctor.setPracticeCertificateNo(docInfoDTO.getPracticeCertificateNo());
+            doctor.setPracticeCertificateIssueDate(docInfoDTO.getPracticeCertificateIssueDate());
+            doctor.setPracticeCertificateIssuePlace(docInfoDTO.getPracticeCertificateIssuePlace());
+            doctor.setLicenseNo(docInfoDTO.getLicenseNo());
+            doctor.setLicenseIssueDate(docInfoDTO.getLicenseIssueDate());
+            doctor.setLicenseIssuePlace(docInfoDTO.getLicenseIssuePlace());
+            doctor.setUpdatedAt(new Date());
+            doctor.setUserUpdateBy(updater);
+
+            DocInfo updatedDoctor = docInfoRepository.save(doctor);
+            return mapToDTO(updatedDoctor);
 
         } catch (Exception e) {
-            return new ResponseObject(AppConstants.STATUS.ERROR, 
-                "Lỗi khi lấy thông tin bác sĩ: " + e.getMessage(), null);
+            throw new RuntimeException("Lỗi cập nhật bác sĩ: " + e.getMessage());
         }
     }
 
     @Override
-    public ResponseObject getAllDoctors(Integer page, Integer pageSize) {
+    public void deleteDoctor(Long id) {
         try {
-            // Default values
-            int currentPage = (page != null && page > 0) ? page - 1 : 0;
-            int size = (pageSize != null && pageSize > 0) ? pageSize : 10;
+            DocInfo doctor = docInfoRepository
+                    .findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ với ID: " + id));
 
-            // Create pageable with sorting by created date descending
-            Pageable pageable = PageRequest.of(currentPage, size, Sort.by("createdAt").descending());
-            
-            Page<DocInfo> doctorPage = docInfoRepository.findAll(pageable);
-
-            // Prepare response with pagination info
-            Map<String, Object> response = new HashMap<>();
-            response.put("doctors", doctorPage.getContent());
-            response.put("currentPage", doctorPage.getNumber() + 1);
-            response.put("totalPages", doctorPage.getTotalPages());
-            response.put("totalItems", doctorPage.getTotalElements());
-            response.put("pageSize", doctorPage.getSize());
-
-            return new ResponseObject(AppConstants.STATUS.SUCCESS, 
-                "Lấy danh sách bác sĩ thành công", response);
-
-        } catch (Exception e) {
-            return new ResponseObject(AppConstants.STATUS.ERROR, 
-                "Lỗi khi lấy danh sách bác sĩ: " + e.getMessage(), null);
-        }
-    }
-
-    @Override
-    public ResponseObject searchDoctors(String practiceCertificateNo, String licenseNo, Integer page, Integer pageSize) {
-        try {
-            // If both search criteria provided, search by practiceCertificateNo first
-            if (practiceCertificateNo != null && !practiceCertificateNo.trim().isEmpty()) {
-                DocInfo doctor = docInfoRepository.findByPracticeCertificateNo(practiceCertificateNo.trim());
-                
-                if (doctor == null) {
-                    return new ResponseObject(AppConstants.STATUS.NOT_FOUND, 
-                        "Không tìm thấy bác sĩ với số chứng chỉ hành nghề: " + practiceCertificateNo, null);
-                }
-                
-                return new ResponseObject(AppConstants.STATUS.SUCCESS, 
-                    "Tìm thấy bác sĩ theo số chứng chỉ hành nghề", doctor);
-            }
-            
-            // Search by licenseNo
-            if (licenseNo != null && !licenseNo.trim().isEmpty()) {
-                DocInfo doctor = docInfoRepository.findByLicenseNo(licenseNo.trim());
-                
-                if (doctor == null) {
-                    return new ResponseObject(AppConstants.STATUS.NOT_FOUND, 
-                        "Không tìm thấy bác sĩ với số giấy phép hành nghề: " + licenseNo, null);
-                }
-                
-                return new ResponseObject(AppConstants.STATUS.SUCCESS, 
-                    "Tìm thấy bác sĩ theo số giấy phép hành nghề", doctor);
-            }
-            
-            // If no search criteria provided, return all doctors with pagination
-            return getAllDoctors(page, pageSize);
-
-        } catch (Exception e) {
-            return new ResponseObject(AppConstants.STATUS.ERROR, 
-                "Lỗi khi tìm kiếm bác sĩ: " + e.getMessage(), null);
-        }
-    }
-
-    @Override
-    @Transactional
-    public ResponseObject deleteDoctor(Long doctorId, Long deletedBy) {
-        try {
-            // Validate doctor exists
-            Optional<DocInfo> doctorOptional = docInfoRepository.findById(doctorId);
-            if (!doctorOptional.isPresent()) {
-                return new ResponseObject(AppConstants.STATUS.NOT_FOUND, 
-                    "Không tìm thấy bác sĩ với ID: " + doctorId, null);
-            }
-
-            // Validate deleter exists
-            Optional<User> deleterOptional = userRepository.findById(deletedBy);
-            if (!deleterOptional.isPresent()) {
-                return new ResponseObject(AppConstants.STATUS.NOT_FOUND, "Không tìm thấy người xóa", null);
-            }
-
-            DocInfo doctor = doctorOptional.get();
-
-            // Check if doctor has any prescriptions
-            List<Prescription> prescriptions = prescriptionRepository.findByDoctorId(doctorId);
-
+            // Check if doctor has active prescriptions
+            List<?> prescriptions = prescriptionRepository.findByDoctorId(id);
             if (!prescriptions.isEmpty()) {
-                return new ResponseObject(AppConstants.STATUS.BAD_REQUEST, 
-                    "Không thể xóa bác sĩ. Bác sĩ có " + prescriptions.size() + " đơn thuốc đã được kê", 
-                    null);
+                throw new RuntimeException(
+                        "Không thể xóa bác sĩ. Bác sĩ có " + prescriptions.size() + " đơn thuốc");
             }
 
-            // Delete the doctor
             docInfoRepository.delete(doctor);
 
-            return new ResponseObject(AppConstants.STATUS.SUCCESS, 
-                "Xóa thông tin bác sĩ thành công", null);
-
         } catch (Exception e) {
-            return new ResponseObject(AppConstants.STATUS.ERROR, 
-                "Lỗi khi xóa bác sĩ: " + e.getMessage(), null);
+            throw new RuntimeException("Lỗi xóa bác sĩ: " + e.getMessage());
         }
+    }
+
+    /** Map DocInfo entity to DocInfoDTO */
+    private DocInfoDTO mapToDTO(DocInfo docInfo) {
+        return DocInfoDTO.builder()
+                .id(docInfo.getId())
+                .userId(docInfo.getUser().getId())
+                .fullName(docInfo.getFullName())
+                .dob(docInfo.getDob())
+                .phone(docInfo.getPhone())
+                .cccd(docInfo.getCccd())
+                .cccdIssueDate(docInfo.getCccdIssueDate())
+                .cccdIssuePlace(docInfo.getCccdIssuePlace())
+                .currentAddress(docInfo.getCurrentAddress())
+                .email(docInfo.getEmail())
+                .practiceCertificateNo(docInfo.getPracticeCertificateNo())
+                .practiceCertificateIssueDate(docInfo.getPracticeCertificateIssueDate())
+                .practiceCertificateIssuePlace(docInfo.getPracticeCertificateIssuePlace())
+                .licenseNo(docInfo.getLicenseNo())
+                .licenseIssueDate(docInfo.getLicenseIssueDate())
+                .licenseIssuePlace(docInfo.getLicenseIssuePlace())
+                .createdAt(docInfo.getCreatedAt())
+                .updatedAt(docInfo.getUpdatedAt())
+                .build();
+    }
+
+    /** Get current authenticated user ID from SecurityContext */
+    private Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new RuntimeException("Không tìm thấy người dùng được xác thực");
+        }
+
+        // Extract UserPrincipal from JWT token
+        Object principal = auth.getPrincipal();
+        if (principal instanceof UserPrincipal) {
+            return ((UserPrincipal) principal).getId();
+        }
+
+        throw new RuntimeException("Không thể xác định ID người dùng hiện tại");
     }
 }
