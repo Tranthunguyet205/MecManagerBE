@@ -1,13 +1,25 @@
 package com.example.mecManager.model;
 
-import jakarta.persistence.*;
+import java.util.Collections;
+import java.util.Date;
+
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import com.example.mecManager.Common.enums.RoleEnum;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import com.example.mecManager.Common.enums.RoleEnum;
-import java.util.Collections;
-import java.util.Date;
 
 @Entity
 @Table(name = "users")
