@@ -13,7 +13,9 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class JwtUtils {
 
@@ -40,63 +42,86 @@ public class JwtUtils {
     }
 
     public String extractRole(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("role", String.class);
+        try {
+            String role = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .get("role", String.class);
+            return role;
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     public boolean extractIsActive(String token) {
-        Object active = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("isActive");
+        try {
+            Object active = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .get("isActive");
 
-        if (active instanceof Boolean) {
-            return (Boolean) active;
-        } else if (active instanceof Integer) {
-            return (Integer) active == 1;
+            boolean result;
+            if (active instanceof Boolean) {
+                result = (Boolean) active;
+            } else if (active instanceof Integer) {
+                result = (Integer) active == 1;
+            } else {
+                result = false;
+            }
+            return result;
+        } catch (Exception e) {
+            throw e;
         }
-        return false;
     }
 
     public String extractUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("username", String.class);
+        try {
+            String username = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .get("username", String.class);
+            return username;
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     public Long extractUserId(String token) {
-        String subject = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
-        return Long.parseLong(subject);
+        try {
+            String subject = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+            Long userId = Long.parseLong(subject);
+            return userId;
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
-    // Xác thực token
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);
-            return true; // Token hợp lệ
+            return true;
         } catch (ExpiredJwtException e) {
-            System.err.println("Token đã hết hạn: " + e.getMessage());
+            log.warn("Token expired");
         } catch (MalformedJwtException e) {
-            System.err.println("Token không đúng định dạng: " + e.getMessage());
+            log.warn("Malformed token");
         } catch (JwtException e) {
-            System.err.println("Token hết hạn: " + e.getMessage());
+            log.warn("JWT validation failed");
+        } catch (Exception e) {
+            log.error("Unexpected error validating token", e);
         }
         return false;
     }

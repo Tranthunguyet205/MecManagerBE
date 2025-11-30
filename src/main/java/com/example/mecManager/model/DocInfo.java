@@ -1,11 +1,19 @@
 package com.example.mecManager.model;
 
-import jakarta.persistence.*;
+import java.util.Date;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 @Entity
 @Table(name = "doctor_info")
@@ -35,9 +43,9 @@ public class DocInfo {
     private String cccd;
 
     @Column(name = "cccd_issue_date", nullable = false)
-    private Date cccdIssueDate;//ngay cap cccd
+    private Date cccdIssueDate;// ngay cap cccd
 
-    @Column(name = "cccd_issue_place",nullable = false)
+    @Column(name = "cccd_issue_place", nullable = false)
     private String cccdIssuePlace;
 
     @Column(name = "current_address", nullable = false)
@@ -63,6 +71,15 @@ public class DocInfo {
 
     @Column(name = "license_issue_place", nullable = false)
     private String licenseIssuePlace;// noi cap giay phep hanh nghe
+
+    @Column(name = "practice_certificate_url", nullable = true)
+    private String practiceCertificateUrl;
+
+    @Column(name = "license_url", nullable = true)
+    private String licenseUrl;
+
+    @Column(name = "national_id_url", nullable = true)
+    private String nationalIdUrl;
 
     @Column(name = "created_at", nullable = false)
     private Date createdAt; // ngay tao ban ghi

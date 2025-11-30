@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.mecManager.model.DocInfo;
 import com.example.mecManager.model.DocInfoDTO;
+import com.example.mecManager.model.DocInfoUpdateDTO;
 import com.example.mecManager.model.User;
 import com.example.mecManager.model.UserPrincipal;
 import com.example.mecManager.repository.DocInfoRepository;
@@ -32,6 +33,7 @@ public class DoctorServiceImpl implements DoctorService {
     private final DocInfoRepository docInfoRepository;
     private final UserRepository userRepository;
     private final PrescriptionRepository prescriptionRepository;
+    private final FileService fileService;
 
     @Override
     public DocInfoDTO createDoctor(DocInfoDTO docInfoDTO) {
@@ -139,7 +141,7 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public DocInfoDTO updateDoctor(Long id, DocInfoDTO docInfoDTO) {
+    public DocInfoDTO updateDoctor(Long id, DocInfoUpdateDTO docInfoUpdateDTO) {
         try {
             DocInfo doctor = docInfoRepository
                     .findById(id)
@@ -150,21 +152,33 @@ public class DoctorServiceImpl implements DoctorService {
                     .findById(updatedBy)
                     .orElseThrow(() -> new RuntimeException("Người cập nhật không tồn tại"));
 
-            // Update fields
-            doctor.setFullName(docInfoDTO.getFullName());
-            doctor.setDob(docInfoDTO.getDob());
-            doctor.setPhone(docInfoDTO.getPhone());
-            doctor.setCccd(docInfoDTO.getCccd());
-            doctor.setCccdIssueDate(docInfoDTO.getCccdIssueDate());
-            doctor.setCccdIssuePlace(docInfoDTO.getCccdIssuePlace());
-            doctor.setCurrentAddress(docInfoDTO.getCurrentAddress());
-            doctor.setEmail(docInfoDTO.getEmail());
-            doctor.setPracticeCertificateNo(docInfoDTO.getPracticeCertificateNo());
-            doctor.setPracticeCertificateIssueDate(docInfoDTO.getPracticeCertificateIssueDate());
-            doctor.setPracticeCertificateIssuePlace(docInfoDTO.getPracticeCertificateIssuePlace());
-            doctor.setLicenseNo(docInfoDTO.getLicenseNo());
-            doctor.setLicenseIssueDate(docInfoDTO.getLicenseIssueDate());
-            doctor.setLicenseIssuePlace(docInfoDTO.getLicenseIssuePlace());
+            // Update only editable fields (userId is fixed after creation)
+            doctor.setFullName(docInfoUpdateDTO.getFullName());
+            doctor.setDob(docInfoUpdateDTO.getDob());
+            doctor.setPhone(docInfoUpdateDTO.getPhone());
+            doctor.setCccd(docInfoUpdateDTO.getCccd());
+            doctor.setCccdIssueDate(docInfoUpdateDTO.getCccdIssueDate());
+            doctor.setCccdIssuePlace(docInfoUpdateDTO.getCccdIssuePlace());
+            doctor.setCurrentAddress(docInfoUpdateDTO.getCurrentAddress());
+            doctor.setEmail(docInfoUpdateDTO.getEmail());
+            doctor.setPracticeCertificateNo(docInfoUpdateDTO.getPracticeCertificateNo());
+            doctor.setPracticeCertificateIssueDate(docInfoUpdateDTO.getPracticeCertificateIssueDate());
+            doctor.setPracticeCertificateIssuePlace(docInfoUpdateDTO.getPracticeCertificateIssuePlace());
+            doctor.setLicenseNo(docInfoUpdateDTO.getLicenseNo());
+            doctor.setLicenseIssueDate(docInfoUpdateDTO.getLicenseIssueDate());
+            doctor.setLicenseIssuePlace(docInfoUpdateDTO.getLicenseIssuePlace());
+
+            // Update file URLs if provided
+            if (docInfoUpdateDTO.getPracticeCertificateUrl() != null) {
+                doctor.setPracticeCertificateUrl(docInfoUpdateDTO.getPracticeCertificateUrl());
+            }
+            if (docInfoUpdateDTO.getLicenseUrl() != null) {
+                doctor.setLicenseUrl(docInfoUpdateDTO.getLicenseUrl());
+            }
+            if (docInfoUpdateDTO.getNationalIdUrl() != null) {
+                doctor.setNationalIdUrl(docInfoUpdateDTO.getNationalIdUrl());
+            }
+
             doctor.setUpdatedAt(new Date());
             doctor.setUserUpdateBy(updater);
 
@@ -189,6 +203,9 @@ public class DoctorServiceImpl implements DoctorService {
                 throw new RuntimeException(
                         "Không thể xóa bác sĩ. Bác sĩ có " + prescriptions.size() + " đơn thuốc");
             }
+
+            // Delete files from MinIO
+            fileService.deleteAllFiles("Doctor", id);
 
             docInfoRepository.delete(doctor);
 
@@ -216,6 +233,9 @@ public class DoctorServiceImpl implements DoctorService {
                 .licenseNo(docInfo.getLicenseNo())
                 .licenseIssueDate(docInfo.getLicenseIssueDate())
                 .licenseIssuePlace(docInfo.getLicenseIssuePlace())
+                .practiceCertificateUrl(docInfo.getPracticeCertificateUrl())
+                .licenseUrl(docInfo.getLicenseUrl())
+                .nationalIdUrl(docInfo.getNationalIdUrl())
                 .createdAt(docInfo.getCreatedAt())
                 .updatedAt(docInfo.getUpdatedAt())
                 .build();

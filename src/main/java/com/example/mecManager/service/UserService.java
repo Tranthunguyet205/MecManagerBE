@@ -7,12 +7,12 @@ import com.example.mecManager.model.UserResponse;
 
 public interface UserService {
     /**
-     * Register a new user
+     * Register a new user and return JWT token
      * 
      * @param request Registration request containing user details
-     * @return UserResponse with registered user info
+     * @return LoginResponse with JWT token and user info
      */
-    UserResponse register(RegisterRequest request);
+    LoginResponse register(RegisterRequest request);
 
     /**
      * Authenticate user and generate JWT token
@@ -29,4 +29,11 @@ public interface UserService {
      * @return UserResponse with user information
      */
     UserResponse getUserById(Long userId);
+
+    /**
+     * Get current logged-in user profile
+     * 
+     * @return UserResponse with current user information
+     */
+    UserResponse getCurrentUserProfile();
 }

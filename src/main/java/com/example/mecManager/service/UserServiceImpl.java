@@ -2,6 +2,8 @@ package com.example.mecManager.service;
 
 import java.util.Date;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +30,7 @@ public class UserServiceImpl implements UserService {
     private final JwtUtils jwtUtils;
 
     @Override
-    public UserResponse register(RegisterRequest request) {
+    public LoginResponse register(RegisterRequest request) {
         if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
             throw new RuntimeException("Tên đăng nhập không được để trống");
         }
@@ -48,9 +50,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        if (request.getFullName() != null) {
-            user.setFullName(request.getFullName().trim());
-        }
+        user.setFullName(username);
         user.setPhone(request.getPhone());
         user.setRole(role);
         user.setIsActive(true);
@@ -60,7 +60,15 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
 
-        return mapToUserResponse(savedUser);
+        String token = jwtUtils.generateToken(savedUser);
+        UserResponse userResponse = mapToUserResponse(savedUser);
+
+        return LoginResponse.builder()
+                .accessToken(token)
+                .tokenType("Bearer")
+                .expiresIn(86400L)
+                .user(userResponse)
+                .build();
     }
 
     @Override
@@ -82,7 +90,7 @@ public class UserServiceImpl implements UserService {
         return LoginResponse.builder()
                 .accessToken(token)
                 .tokenType("Bearer")
-                .expiresIn(86400L) // 24 hours in seconds
+                .expiresIn(86400L)
                 .user(userResponse)
                 .build();
     }
@@ -94,6 +102,24 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
         return mapToUserResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse getCurrentUserProfile() {
+        String username = getCurrentUsername();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        return mapToUserResponse(user);
+    }
+
+    private String getCurrentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new RuntimeException("Không tìm thấy người dùng được xác thực");
+        }
+        return auth.getName();
     }
 
     private UserResponse mapToUserResponse(User user) {

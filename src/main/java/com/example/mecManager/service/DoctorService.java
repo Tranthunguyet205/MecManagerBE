@@ -1,6 +1,7 @@
 package com.example.mecManager.service;
 
 import com.example.mecManager.model.DocInfoDTO;
+import com.example.mecManager.model.DocInfoUpdateDTO;
 
 public interface DoctorService {
     /**
@@ -43,11 +44,11 @@ public interface DoctorService {
     /**
      * Update doctor information
      *
-     * @param id         Doctor ID
-     * @param docInfoDTO Updated doctor info
+     * @param id               Doctor ID
+     * @param docInfoUpdateDTO Updated doctor info (without userId)
      * @return Updated doctor DTO
      */
-    DocInfoDTO updateDoctor(Long id, DocInfoDTO docInfoDTO);
+    DocInfoDTO updateDoctor(Long id, DocInfoUpdateDTO docInfoUpdateDTO);
 
     /**
      * Delete doctor by ID

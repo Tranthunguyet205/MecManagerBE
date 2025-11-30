@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   mysql:
     image: mysql:8.0
@@ -12,5 +12,20 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
+  minio:
+    image: minio/minio:latest
+    container_name: mecmanager-minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/minio_data
+    command: minio server /minio_data --console-address ":9001"
+
 volumes:
   db_data:
+  minio_data:
