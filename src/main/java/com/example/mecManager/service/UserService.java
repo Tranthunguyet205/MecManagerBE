@@ -8,7 +8,6 @@ import com.example.mecManager.model.UserResponse;
 public interface UserService {
     /**
      * Register a new user
-     * Role can be specified in request, defaults to DOCTOR if not provided
      * 
      * @param request Registration request containing user details
      * @return UserResponse with registered user info

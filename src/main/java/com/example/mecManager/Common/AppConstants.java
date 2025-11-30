@@ -41,6 +41,11 @@ public class AppConstants {
                 "/ws/**",
                 "/swagger-ui/**",
                 "/swagger-ui.html",
+                "/v3/api-docs/**",
+                "/v3/api-docs",
+                "/swagger-resources/**",
+                "/swagger-resources",
+                "/webjars/**",
                 "/api-docs",
                 "/api-docs/**",
         };

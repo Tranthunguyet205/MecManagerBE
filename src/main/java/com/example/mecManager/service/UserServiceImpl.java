@@ -37,23 +37,10 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Mật khẩu không được để trống");
         }
 
-        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
-            throw new RuntimeException("Họ và tên không được để trống");
-        }
-
-        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            throw new RuntimeException("Email không được để trống");
-        }
-
         String username = request.getUsername().trim().toLowerCase();
-        String email = request.getEmail().trim().toLowerCase();
 
         if (userRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Tên đăng nhập này đã được sử dụng. Vui lòng chọn tên khác.");
-        }
-
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("Email này đã được đăng ký. Vui lòng sử dụng email khác.");
         }
 
         RoleEnum role = (request.getRole() != null) ? request.getRole() : RoleEnum.DOCTOR;
@@ -61,8 +48,9 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setFullName(request.getFullName().trim());
-        user.setEmail(email);
+        if (request.getFullName() != null) {
+            user.setFullName(request.getFullName().trim());
+        }
         user.setPhone(request.getPhone());
         user.setRole(role);
         user.setIsActive(true);
@@ -113,7 +101,6 @@ public class UserServiceImpl implements UserService {
                 .id(user.getId())
                 .username(user.getUsername())
                 .fullName(user.getFullName())
-                .email(user.getEmail())
                 .phone(user.getPhone())
                 .gender(user.getGender())
                 .role(user.getRole().name())

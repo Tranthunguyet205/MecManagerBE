@@ -1,5 +1,6 @@
 package com.example.mecManager.controller;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +17,6 @@ import com.example.mecManager.model.LoginResponse;
 import com.example.mecManager.model.RegisterRequest;
 import com.example.mecManager.model.UserResponse;
 import com.example.mecManager.service.UserService;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +31,7 @@ public class UserController {
     /**
      * Register a new user
      * 
-     * @param request Registration request with username, password, fullName, email,
-     *                phone
+     * @param request Registration request with username, password, fullName, phone
      * @return ApiResponse with registered user info
      */
     @PostMapping("/register")
@@ -46,8 +45,6 @@ public class UserController {
             String message = "Dữ liệu đã tồn tại";
             if (e.getMessage().contains("username")) {
                 message = "Tên đăng nhập này đã được sử dụng";
-            } else if (e.getMessage().contains("email")) {
-                message = "Email này đã được đăng ký";
             }
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
