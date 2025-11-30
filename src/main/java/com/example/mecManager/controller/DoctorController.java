@@ -1,6 +1,5 @@
 package com.example.mecManager.controller;
 
-import org.hibernate.annotations.Parameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +23,7 @@ import com.example.mecManager.service.DoctorService;
 import com.example.mecManager.service.FileService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -152,10 +152,7 @@ public class DoctorController {
      */
     @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Update doctor profile", description = "Update doctor information with optional file uploads. Admin access required.", parameters = {
-            @Parameter(name = "id", description = "Doctor ID to update", required = true, in = ParameterIn.PATH, schema = @Schema(type = "integer", format = "int64", example = "1"))
-    })
-    @RequestBody(description = "Doctor update data with optional files", required = true, content = @Content(mediaType = "multipart/form-data", schema = @Schema(type = "object")))
+    @Operation(summary = "Update doctor profile", description = "Update doctor information with optional file uploads. Admin access required.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Doctor updated successfully"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid data or file upload failed"),
