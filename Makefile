@@ -85,13 +85,11 @@ reset-db:
 	@echo "$(RED)WARNING: This will DROP ALL TABLES in vaccine_management database!$(NC)"
 	@echo "$(RED)Press Ctrl+C to cancel, or wait 3 seconds to continue...$(NC)"
 	@sleep 3
-	@echo "$(BLUE)Connecting to MySQL and dropping all tables...$(NC)"
-	@mysql -h localhost -u root -pQuan@762003 vaccine_management -e \
-		"SET FOREIGN_KEY_CHECKS = 0; \
-		SELECT CONCAT('DROP TABLE IF EXISTS \`', TABLE_NAME, '\`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'vaccine_management' INTO OUTFILE '/tmp/drop_tables.sql'; \
-		SOURCE /tmp/drop_tables.sql; \
-		SET FOREIGN_KEY_CHECKS = 1;" 2>/dev/null || echo "$(RED)✗ Failed - ensure MySQL is running and credentials are correct$(NC)"
-	@echo "$(GREEN)✓ Database reset complete!$(NC)"
+	@echo "$(BLUE)Connecting to MySQL Docker container (mecmanager-mysql) and dropping all tables...$(NC)"
+	@docker exec mecmanager-mysql mysql -u root -pQuan@762003 vaccine_management -e "SET FOREIGN_KEY_CHECKS = 0;" && \
+	docker exec mecmanager-mysql mysql -u root -pQuan@762003 vaccine_management -e "DROP TABLE IF EXISTS prescription_detail, prescription, medicine_info, doctor_info, user;" && \
+	docker exec mecmanager-mysql mysql -u root -pQuan@762003 vaccine_management -e "SET FOREIGN_KEY_CHECKS = 1;" && \
+	echo "$(GREEN)✓ Database reset complete!$(NC)" || echo "$(RED)✗ Failed - ensure MySQL Docker container (mecmanager-mysql) is running$(NC)"
 	@echo "$(BLUE)Tables will be recreated when you run 'make rebuild'$(NC)"
 
 install-deps:
