@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import com.example.mecManager.auth.UserPrincipal;
 import com.example.mecManager.common.enums.RoleEnum;
 import com.example.mecManager.common.enums.UserStatusEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,6 +42,7 @@ public class User {
     @Column(nullable = true, unique = false, length = 100, name = "full_name")
     private String fullName;
 
+    @JsonIgnore
     @Column(name = "password", nullable = false)
     private String password;
 

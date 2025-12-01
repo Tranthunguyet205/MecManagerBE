@@ -39,18 +39,52 @@ public class DoctorController {
     private final DoctorService doctorService;
     private final FileService fileService;
 
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
-    @Operation(summary = "Create new doctor profile", description = "Create a new doctor profile. Doctors can create their own profile, Admin can create for any user.")
+    @Operation(summary = "Create new doctor profile", description = "Create a new doctor profile with optional file uploads. Doctors can create their own profile, Admin can create for any user.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Doctor created successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid data"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid data or file upload failed"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Access denied")
     })
     public ResponseEntity<ApiResponse<DocInfoDTO>> createDoctor(
-            @Valid @RequestBody DocInfoDTO docInfoDTO) {
+            @RequestPart("doctorInfo") @Valid DocInfoUpdateDTO docInfoDTO,
+            @Parameter(description = "Practice certificate file (optional, max 5MB)") @RequestPart(value = "practiceCertificate", required = false) MultipartFile practiceCert,
+            @Parameter(description = "License file (optional, max 5MB)") @RequestPart(value = "license", required = false) MultipartFile license,
+            @Parameter(description = "National ID file (optional, max 5MB)") @RequestPart(value = "nationalId", required = false) MultipartFile nationalId) {
         try {
-            DocInfoDTO createdDoctor = doctorService.createDoctor(docInfoDTO);
+            // Get user ID from request
+            Long userId = docInfoDTO.getUserId();
+            if (userId == null) {
+                throw new RuntimeException("User ID is required for doctor profile creation");
+            }
+            
+            // Upload files and set URLs
+            uploadDoctorFiles(userId, docInfoDTO, practiceCert, license, nationalId);
+            
+            // Convert to DocInfoDTO for service call
+            DocInfoDTO docInfoDTOForService = DocInfoDTO.builder()
+                    .userId(docInfoDTO.getUserId())
+                    .fullName(docInfoDTO.getFullName())
+                    .dob(docInfoDTO.getDob())
+                    .phone(docInfoDTO.getPhone())
+                    .cccd(docInfoDTO.getCccd())
+                    .cccdIssueDate(docInfoDTO.getCccdIssueDate())
+                    .cccdIssuePlace(docInfoDTO.getCccdIssuePlace())
+                    .currentAddress(docInfoDTO.getCurrentAddress())
+                    .email(docInfoDTO.getEmail())
+                    .practiceCertificateNo(docInfoDTO.getPracticeCertificateNo())
+                    .practiceCertificateIssueDate(docInfoDTO.getPracticeCertificateIssueDate())
+                    .practiceCertificateIssuePlace(docInfoDTO.getPracticeCertificateIssuePlace())
+                    .licenseNo(docInfoDTO.getLicenseNo())
+                    .licenseIssueDate(docInfoDTO.getLicenseIssueDate())
+                    .licenseIssuePlace(docInfoDTO.getLicenseIssuePlace())
+                    .practiceCertificateUrl(docInfoDTO.getPracticeCertificateUrl())
+                    .licenseUrl(docInfoDTO.getLicenseUrl())
+                    .nationalIdUrl(docInfoDTO.getNationalIdUrl())
+                    .build();
+            
+            DocInfoDTO createdDoctor = doctorService.createDoctor(docInfoDTOForService);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(ApiResponse.success("Doctor created successfully", createdDoctor));
@@ -143,8 +177,8 @@ public class DoctorController {
     /**
      * Update doctor information with file uploads
      * 
-     * @param id               Doctor ID
-     * @param docInfoUpdateDTO Updated doctor information (without userId)
+     * @param id               Doctor ID or User ID
+     * @param docInfoUpdateDTO Updated doctor information
      * @param practiceCert     Practice certificate file
      * @param license          License file
      * @param nationalId       National ID file
@@ -152,7 +186,7 @@ public class DoctorController {
      */
     @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
-    @Operation(summary = "Update doctor profile", description = "Update doctor information with optional file uploads. Doctors can update their own profile, Admin can update any.")
+    @Operation(summary = "Update doctor profile", description = "Update doctor information with optional file uploads. Doctors can update their own profile, Admin can update any. Accepts both DocInfo ID and User ID.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Doctor updated successfully"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid data or file upload failed"),
@@ -160,28 +194,14 @@ public class DoctorController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Doctor not found")
     })
     public ResponseEntity<ApiResponse<DocInfoDTO>> updateDoctor(
-            @Parameter(description = "Doctor ID to update", required = true, example = "1") @PathVariable Long id,
+            @Parameter(description = "Doctor ID or User ID to update", required = true, example = "1") @PathVariable Long id,
             @RequestPart("doctorInfo") @Valid DocInfoUpdateDTO docInfoUpdateDTO,
             @Parameter(description = "Practice certificate file (optional, max 5MB)") @RequestPart(value = "practiceCertificate", required = false) MultipartFile practiceCert,
             @Parameter(description = "License file (optional, max 5MB)") @RequestPart(value = "license", required = false) MultipartFile license,
             @Parameter(description = "National ID file (optional, max 5MB)") @RequestPart(value = "nationalId", required = false) MultipartFile nationalId) {
         try {
-            // Upload files if provided
-            if (practiceCert != null && !practiceCert.isEmpty()) {
-                String url = fileService.uploadFile("doctor", id,
-                        "practice-cert-" + System.currentTimeMillis() + getExtension(practiceCert), practiceCert);
-                docInfoUpdateDTO.setPracticeCertificateUrl(url);
-            }
-            if (license != null && !license.isEmpty()) {
-                String url = fileService.uploadFile("doctor", id,
-                        "license-" + System.currentTimeMillis() + getExtension(license), license);
-                docInfoUpdateDTO.setLicenseUrl(url);
-            }
-            if (nationalId != null && !nationalId.isEmpty()) {
-                String url = fileService.uploadFile("doctor", id,
-                        "national-id-" + System.currentTimeMillis() + getExtension(nationalId), nationalId);
-                docInfoUpdateDTO.setNationalIdUrl(url);
-            }
+            // Upload files and set URLs
+            uploadDoctorFiles(id, docInfoUpdateDTO, practiceCert, license, nationalId);
 
             DocInfoDTO updatedDoctor = doctorService.updateDoctor(id, docInfoUpdateDTO);
             return ResponseEntity.ok(ApiResponse.success("Doctor updated successfully", updatedDoctor));
@@ -222,5 +242,37 @@ public class DoctorController {
         if (name == null || !name.contains("."))
             return "";
         return name.substring(name.lastIndexOf("."));
+    }
+
+    /**
+     * Shared method to upload doctor files
+     * 
+     * @param doctorId          Doctor ID or User ID
+     * @param docInfoUpdateDTO  DTO to store file URLs
+     * @param practiceCert      Practice certificate file (optional)
+     * @param license           License file (optional)
+     * @param nationalId        National ID file (optional)
+     */
+    private void uploadDoctorFiles(Long doctorId, DocInfoUpdateDTO docInfoUpdateDTO,
+                                  MultipartFile practiceCert, MultipartFile license, MultipartFile nationalId) {
+        try {
+            if (practiceCert != null && !practiceCert.isEmpty()) {
+                String filename = "practice-cert-" + System.currentTimeMillis() + getExtension(practiceCert);
+                String url = fileService.uploadFile("doctor", doctorId, filename, practiceCert);
+                docInfoUpdateDTO.setPracticeCertificateUrl(url);
+            }
+            if (license != null && !license.isEmpty()) {
+                String filename = "license-" + System.currentTimeMillis() + getExtension(license);
+                String url = fileService.uploadFile("doctor", doctorId, filename, license);
+                docInfoUpdateDTO.setLicenseUrl(url);
+            }
+            if (nationalId != null && !nationalId.isEmpty()) {
+                String filename = "national-id-" + System.currentTimeMillis() + getExtension(nationalId);
+                String url = fileService.uploadFile("doctor", doctorId, filename, nationalId);
+                docInfoUpdateDTO.setNationalIdUrl(url);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi tải file lên: " + e.getMessage(), e);
+        }
     }
 }

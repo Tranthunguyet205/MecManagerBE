@@ -33,20 +33,17 @@ public class MedicineInfo {
     @Column(name = "usage_instructions", nullable = false)
     private String usageInstructions;// cach dung thuoc
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
     @Column(name = "updated_at", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "create_by", nullable = false)
-    private User userCreateBy;
+    @Column(name = "create_by", nullable = false)
+    private Long createdBy;
 
-    @ManyToOne
-    @JoinColumn(name = "update_by")
-    private User userUpdateBy;
-
-
-
+    @Column(name = "update_by")
+    private Long updatedBy;
 }

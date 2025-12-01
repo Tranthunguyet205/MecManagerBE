@@ -6,8 +6,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "prescription")
@@ -67,6 +69,11 @@ public class Prescription {
     @ManyToOne
     @JoinColumn(name = "doctor_id", nullable = false)
     private DocInfo docInfo;
+
+    // Prescription medicines
+    @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<PrescriptionDetail> medicines;
 
     // Audit fields
     @Column(name = "created_at", nullable = false)

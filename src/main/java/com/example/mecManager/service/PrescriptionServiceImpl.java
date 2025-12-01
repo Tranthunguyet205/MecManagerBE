@@ -1,6 +1,8 @@
 package com.example.mecManager.service;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.security.core.Authentication;
@@ -9,11 +11,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.mecManager.model.entity.DocInfo;
+import com.example.mecManager.model.entity.MedicineInfo;
 import com.example.mecManager.model.entity.Prescription;
+import com.example.mecManager.model.entity.PrescriptionDetail;
 import com.example.mecManager.dto.PrescriptionCreateDTO;
 import com.example.mecManager.dto.PrescriptionUpdateDTO;
 import com.example.mecManager.auth.UserPrincipal;
 import com.example.mecManager.repository.DocInfoRepository;
+import com.example.mecManager.repository.MedicineInfoRepository;
+import com.example.mecManager.repository.PrescriptionDetailRepository;
 import com.example.mecManager.repository.PrescriptionRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -28,6 +34,8 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     private final PrescriptionRepository prescriptionRepository;
     private final DocInfoRepository docInfoRepository;
+    private final MedicineInfoRepository medicineInfoRepository;
+    private final PrescriptionDetailRepository prescriptionDetailRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -87,6 +95,26 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             Prescription saved = prescriptionRepository.save(prescription);
             log.info("Prescription created: ID={}, Code={}, Patient={}", 
                     saved.getId(), saved.getPrescriptionCode(), saved.getPatientName());
+
+            // Create prescription details (medicines)
+            if (dto.getMedicines() != null && !dto.getMedicines().isEmpty()) {
+                List<PrescriptionDetail> details = new ArrayList<>();
+                for (var medicineDTO : dto.getMedicines()) {
+                    MedicineInfo medicine = medicineInfoRepository.findById(medicineDTO.getMedicineId())
+                            .orElseThrow(() -> new EntityNotFoundException(
+                                    "Không tìm thấy thuốc với ID: " + medicineDTO.getMedicineId()));
+
+                    PrescriptionDetail detail = new PrescriptionDetail();
+                    detail.setPrescription(saved);
+                    detail.setMedicineInfo(medicine);
+                    detail.setQuantity(medicineDTO.getQuantity());
+                    detail.setUsageInstructions(medicineDTO.getUsageInstructions());
+                    details.add(detail);
+                }
+                prescriptionDetailRepository.saveAll(details);
+                saved.setMedicines(details);
+                log.info("Created {} prescription details for prescription ID={}", details.size(), saved.getId());
+            }
 
             return saved;
 

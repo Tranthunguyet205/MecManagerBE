@@ -4,8 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "prescription_detail")
@@ -19,6 +18,7 @@ public class PrescriptionDetail {
 
     @ManyToOne
     @JoinColumn(name = "prescription_id", nullable = false)
+    @JsonBackReference
     private Prescription prescription;   // 1 chi tiết thuộc 1 đơn thuốc
 
     @ManyToOne

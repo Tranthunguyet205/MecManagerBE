@@ -91,10 +91,10 @@ public class DocInfo {
 
     @ManyToOne
     @JoinColumn(name = "create_by", nullable = false)
-    private User userCreateBy;
+    private User createdBy;
 
     @ManyToOne
     @JoinColumn(name = "update_by")
-    private User userUpdateBy;
+    private User updatedBy;
 
 }

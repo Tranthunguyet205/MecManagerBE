@@ -1,6 +1,5 @@
 package com.example.mecManager.service;
 
-import com.example.mecManager.model.entity.MedicineInfo;
 import com.example.mecManager.dto.MedicineInfoDTO;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -15,10 +14,10 @@ public interface MedicineService {
      * Get medicine by ID
      * 
      * @param id medicine ID
-     * @return MedicineInfo entity
+     * @return MedicineResponseDTO
      * @throws EntityNotFoundException if not found
      */
-    MedicineInfo getMedicineById(Long id);
+    Object getMedicineById(Long id);
 
     /**
      * Get all medicines with pagination
@@ -30,21 +29,31 @@ public interface MedicineService {
     Object getAllMedicines(Integer page, Integer pageSize);
 
     /**
+     * Search medicines by name or code
+     * 
+     * @param query    Search query (medicine name or code)
+     * @param page     zero-based page number (default 0)
+     * @param pageSize number of records per page (default 10)
+     * @return Map containing paginated search results and metadata
+     */
+    Object searchMedicines(String query, Integer page, Integer pageSize);
+
+    /**
      * Create a new medicine
      * 
      * @param medicineDTO medicine data
-     * @return created MedicineInfo entity
+     * @return created MedicineResponseDTO
      */
-    MedicineInfo createMedicine(MedicineInfoDTO medicineDTO);
+    Object createMedicine(MedicineInfoDTO medicineDTO);
 
     /**
      * Update medicine information
      * 
      * @param id          medicine ID
      * @param medicineDTO updated medicine data
-     * @return updated MedicineInfo entity
+     * @return updated MedicineResponseDTO
      */
-    MedicineInfo updateMedicine(Long id, MedicineInfoDTO medicineDTO);
+    Object updateMedicine(Long id, MedicineInfoDTO medicineDTO);
 
     /**
      * Delete medicine by ID

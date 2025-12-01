@@ -74,7 +74,7 @@ public class DoctorServiceImpl implements DoctorService {
             docInfo.setLicenseIssueDate(docInfoDTO.getLicenseIssueDate());
             docInfo.setLicenseIssuePlace(docInfoDTO.getLicenseIssuePlace());
             docInfo.setCreatedAt(new Date());
-            docInfo.setUserCreateBy(creator);
+            docInfo.setCreatedBy(creator);
 
             DocInfo savedDocInfo = docInfoRepository.save(docInfo);
             return mapToDTO(savedDocInfo);
@@ -143,16 +143,55 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public DocInfoDTO updateDoctor(Long id, DocInfoUpdateDTO docInfoUpdateDTO) {
         try {
-            DocInfo doctor = docInfoRepository
-                    .findById(id)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ với ID: " + id));
-
             Long updatedBy = getCurrentUserId();
             User updater = userRepository
                     .findById(updatedBy)
                     .orElseThrow(() -> new RuntimeException("Người cập nhật không tồn tại"));
 
-            // Update only editable fields (userId is fixed after creation)
+            // First try to find as DocInfo ID
+            DocInfo doctor = docInfoRepository.findById(id).orElse(null);
+            
+            // If not found as DocInfo ID, try to find as User ID and get their DocInfo
+            if (doctor == null) {
+                User user = userRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ hoặc người dùng với ID: " + id));
+                
+                doctor = docInfoRepository.findByUserId(id);
+                
+                // If DocInfo doesn't exist for this user, create it
+                if (doctor == null) {
+                    doctor = DocInfo.builder()
+                            .user(user)
+                            .fullName(docInfoUpdateDTO.getFullName())
+                            .dob(docInfoUpdateDTO.getDob())
+                            .phone(docInfoUpdateDTO.getPhone())
+                            .cccd(docInfoUpdateDTO.getCccd())
+                            .cccdIssueDate(docInfoUpdateDTO.getCccdIssueDate())
+                            .cccdIssuePlace(docInfoUpdateDTO.getCccdIssuePlace())
+                            .currentAddress(docInfoUpdateDTO.getCurrentAddress())
+                            .email(docInfoUpdateDTO.getEmail())
+                            .practiceCertificateNo(docInfoUpdateDTO.getPracticeCertificateNo())
+                            .practiceCertificateIssueDate(docInfoUpdateDTO.getPracticeCertificateIssueDate())
+                            .practiceCertificateIssuePlace(docInfoUpdateDTO.getPracticeCertificateIssuePlace())
+                            .licenseNo(docInfoUpdateDTO.getLicenseNo())
+                            .licenseIssueDate(docInfoUpdateDTO.getLicenseIssueDate())
+                            .licenseIssuePlace(docInfoUpdateDTO.getLicenseIssuePlace())
+                            .practiceCertificateUrl(docInfoUpdateDTO.getPracticeCertificateUrl())
+                            .licenseUrl(docInfoUpdateDTO.getLicenseUrl())
+                            .nationalIdUrl(docInfoUpdateDTO.getNationalIdUrl())
+                            .createdAt(new Date())
+                            .updatedAt(new Date())
+                            .createdBy(updater)
+                            .updatedBy(updater)
+                            .build();
+                    
+                    doctor = docInfoRepository.save(doctor);
+                    return mapToDTO(doctor);
+                }
+            }
+
+            // Update existing DocInfo
             doctor.setFullName(docInfoUpdateDTO.getFullName());
             doctor.setDob(docInfoUpdateDTO.getDob());
             doctor.setPhone(docInfoUpdateDTO.getPhone());
@@ -180,7 +219,7 @@ public class DoctorServiceImpl implements DoctorService {
             }
 
             doctor.setUpdatedAt(new Date());
-            doctor.setUserUpdateBy(updater);
+            doctor.setUpdatedBy(updater);
 
             DocInfo updatedDoctor = docInfoRepository.save(doctor);
             return mapToDTO(updatedDoctor);

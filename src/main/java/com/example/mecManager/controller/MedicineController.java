@@ -54,12 +54,38 @@ public class MedicineController {
      * @return ApiResponse with medicine details
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<ApiResponse<?>> getMedicineById(@PathVariable Long id) {
         try {
             var medicine = medicineService.getMedicineById(id);
             return ResponseEntity.ok(ApiResponse.success(medicine));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(404, e.getMessage()));
+        }
+    }
+
+    /**
+     * Search medicines by name or code
+     * Must be placed BEFORE /{id} to avoid routing conflicts
+     *
+     * @param query    Search query (name or code)
+     * @param page     Page number (0-based)
+     * @param pageSize Items per page
+     * @return ApiResponse with search results
+     */
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
+    public ResponseEntity<ApiResponse<?>> searchMedicines(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        try {
+            var medicines = medicineService.searchMedicines(query, page, pageSize);
+            return ResponseEntity.ok(ApiResponse.success(medicines));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(500, e.getMessage()));
         }
     }
 
@@ -71,6 +97,7 @@ public class MedicineController {
      * @return ApiResponse with medicine list
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<ApiResponse<?>> getAllMedicines(
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer pageSize) {

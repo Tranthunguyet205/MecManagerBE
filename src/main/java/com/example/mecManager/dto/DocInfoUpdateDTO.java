@@ -11,13 +11,16 @@ import lombok.NoArgsConstructor;
 
 /**
  * DTO for updating doctor information
- * Only includes editable fields, excludes userId which is set during creation
+ * Only includes editable fields, userId can be provided for creation
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class DocInfoUpdateDTO {
+
+  // User ID (required for creation, optional for updates)
+  private Long userId;
 
   @NotBlank(message = "Tên đầy đủ không được để trống")
   private String fullName;
