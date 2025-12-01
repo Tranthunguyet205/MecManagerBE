@@ -1,7 +1,7 @@
 package com.example.mecManager.service;
 
-import com.example.mecManager.model.DocInfoDTO;
-import com.example.mecManager.model.DocInfoUpdateDTO;
+import com.example.mecManager.dto.DocInfoDTO;
+import com.example.mecManager.dto.DocInfoUpdateDTO;
 
 public interface DoctorService {
     /**

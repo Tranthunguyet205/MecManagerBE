@@ -6,7 +6,7 @@ import java.util.Date;
 
 import org.springframework.stereotype.Component;
 
-import com.example.mecManager.model.User;
+import com.example.mecManager.model.entity.User;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -30,7 +30,7 @@ public class JwtUtils {
                 .claim("role", user.getRole().name())
                 .claim("fullName", user.getFullName())
                 .claim("profilePictureUrl", user.getProfilePictureUrl())
-                .claim("isActive", user.getIsActive())
+                .claim("status", user.getStatus())
                 .claim("createdAt", user.getCreatedAt())
                 .claim("updatedAt", user.getUpdatedAt())
                 .claim("gender", user.getGender())
@@ -55,24 +55,20 @@ public class JwtUtils {
         }
     }
 
-    public boolean extractIsActive(String token) {
+    public String extractStatus(String token) {
         try {
-            Object active = Jwts.parserBuilder()
+            Object status = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
                     .getBody()
-                    .get("isActive");
+                    .get("status");
 
-            boolean result;
-            if (active instanceof Boolean) {
-                result = (Boolean) active;
-            } else if (active instanceof Integer) {
-                result = (Integer) active == 1;
+            if (status instanceof String) {
+                return (String) status;
             } else {
-                result = false;
+                return "PENDING"; // Default fallback
             }
-            return result;
         } catch (Exception e) {
             throw e;
         }

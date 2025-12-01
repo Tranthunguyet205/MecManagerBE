@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.mecManager.Common.ApiResponse;
-import com.example.mecManager.Common.AppConstants;
-import com.example.mecManager.model.DocInfoDTO;
-import com.example.mecManager.model.DocInfoUpdateDTO;
+import com.example.mecManager.common.response.ApiResponse;
+import com.example.mecManager.common.constants.AppConstants;
+import com.example.mecManager.dto.DocInfoDTO;
+import com.example.mecManager.dto.DocInfoUpdateDTO;
 import com.example.mecManager.service.DoctorService;
 import com.example.mecManager.service.FileService;
 
@@ -40,8 +40,8 @@ public class DoctorController {
     private final FileService fileService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Create new doctor profile", description = "Create a new doctor profile. Admin access required.")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
+    @Operation(summary = "Create new doctor profile", description = "Create a new doctor profile. Doctors can create their own profile, Admin can create for any user.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Doctor created successfully"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid data"),
@@ -151,8 +151,8 @@ public class DoctorController {
      * @return ApiResponse with updated doctor info
      */
     @PutMapping(value = "/{id}", consumes = "multipart/form-data")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Update doctor profile", description = "Update doctor information with optional file uploads. Admin access required.")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
+    @Operation(summary = "Update doctor profile", description = "Update doctor information with optional file uploads. Doctors can update their own profile, Admin can update any.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Doctor updated successfully"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid data or file upload failed"),
@@ -168,17 +168,17 @@ public class DoctorController {
         try {
             // Upload files if provided
             if (practiceCert != null && !practiceCert.isEmpty()) {
-                String url = fileService.uploadFile("Doctor", id,
+                String url = fileService.uploadFile("doctor", id,
                         "practice-cert-" + System.currentTimeMillis() + getExtension(practiceCert), practiceCert);
                 docInfoUpdateDTO.setPracticeCertificateUrl(url);
             }
             if (license != null && !license.isEmpty()) {
-                String url = fileService.uploadFile("Doctor", id,
+                String url = fileService.uploadFile("doctor", id,
                         "license-" + System.currentTimeMillis() + getExtension(license), license);
                 docInfoUpdateDTO.setLicenseUrl(url);
             }
             if (nationalId != null && !nationalId.isEmpty()) {
-                String url = fileService.uploadFile("Doctor", id,
+                String url = fileService.uploadFile("doctor", id,
                         "national-id-" + System.currentTimeMillis() + getExtension(nationalId), nationalId);
                 docInfoUpdateDTO.setNationalIdUrl(url);
             }

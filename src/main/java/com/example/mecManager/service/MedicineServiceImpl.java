@@ -1,10 +1,10 @@
 package com.example.mecManager.service;
 
-import com.example.mecManager.model.MedicineInfo;
-import com.example.mecManager.model.MedicineInfoDTO;
-import com.example.mecManager.model.PrescriptionDetail;
-import com.example.mecManager.model.User;
-import com.example.mecManager.model.UserPrincipal;
+import com.example.mecManager.model.entity.MedicineInfo;
+import com.example.mecManager.dto.MedicineInfoDTO;
+import com.example.mecManager.model.entity.PrescriptionDetail;
+import com.example.mecManager.model.entity.User;
+import com.example.mecManager.auth.UserPrincipal;
 import com.example.mecManager.repository.MedicineInfoRepository;
 import com.example.mecManager.repository.PrescriptionDetailRepository;
 import com.example.mecManager.repository.UserRepository;

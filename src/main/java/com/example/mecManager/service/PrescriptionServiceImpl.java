@@ -1,8 +1,6 @@
 package com.example.mecManager.service;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.security.core.Authentication;
@@ -10,31 +8,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.mecManager.model.DocInfo;
-import com.example.mecManager.model.MedicineInfo;
-import com.example.mecManager.model.PatientProfile;
-import com.example.mecManager.model.Prescription;
-import com.example.mecManager.model.PrescriptionDTO;
-import com.example.mecManager.model.PrescriptionDetail;
-import com.example.mecManager.model.PrescriptionResDTO;
-import com.example.mecManager.model.PrescriptionUpdateDTO;
-import com.example.mecManager.model.UserPrincipal;
+import com.example.mecManager.model.entity.DocInfo;
+import com.example.mecManager.model.entity.Prescription;
+import com.example.mecManager.dto.PrescriptionCreateDTO;
+import com.example.mecManager.dto.PrescriptionUpdateDTO;
+import com.example.mecManager.auth.UserPrincipal;
 import com.example.mecManager.repository.DocInfoRepository;
-import com.example.mecManager.repository.MedicineInfoRepository;
-import com.example.mecManager.repository.PatientProfileRepository;
-import com.example.mecManager.repository.PrescriptionDetailRepository;
 import com.example.mecManager.repository.PrescriptionRepository;
-import com.example.mecManager.repository.PrescriptionRepositoryJdbc;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Service implementation for Prescription management
- * Handles prescription CRUD operations, search, and business logic
- * Important: Prescriptions can only be edited within 1 hour of creation
- */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -42,19 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 public class PrescriptionServiceImpl implements PrescriptionService {
 
     private final PrescriptionRepository prescriptionRepository;
-    private final PrescriptionRepositoryJdbc prescriptionRepositoryJdbc;
-    private final PrescriptionDetailRepository prescriptionDetailRepository;
-    private final PatientProfileRepository patientProfileRepository;
     private final DocInfoRepository docInfoRepository;
-    private final MedicineInfoRepository medicineInfoRepository;
 
-    /**
-     * Get prescription by code
-     * 
-     * @param code prescription code
-     * @return Prescription entity
-     * @throws EntityNotFoundException if not found
-     */
     @Override
     @Transactional(readOnly = true)
     public Prescription getPrescriptionByCode(String code) {
@@ -66,13 +40,6 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         return prescription;
     }
 
-    /**
-     * Get prescription by ID
-     * 
-     * @param id prescription ID
-     * @return Prescription entity
-     * @throws EntityNotFoundException if not found
-     */
     @Override
     @Transactional(readOnly = true)
     public Prescription getPrescriptionById(Long id) {
@@ -83,68 +50,43 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 });
     }
 
-    /**
-     * Search prescriptions by DTO criteria
-     * 
-     * @param prescriptionDTO search criteria
-     * @return search result object with pagination and list
-     */
     @Override
     @Transactional(readOnly = true)
-    public Object findByDTO(PrescriptionDTO prescriptionDTO) {
-        try {
-            PrescriptionResDTO result = prescriptionRepositoryJdbc.findPrescriptionsByDTO(prescriptionDTO);
-            log.debug("Prescription search completed with criteria: {}", prescriptionDTO);
-            return result;
-        } catch (Exception e) {
-            log.error("Error searching prescriptions", e);
-            throw new RuntimeException("Lỗi khi tìm kiếm đơn thuốc: " + e.getMessage(), e);
-        }
+    public Object findByDTO(PrescriptionCreateDTO prescriptionDTO) {
+        // TODO: Implement search logic if needed
+        return null;
     }
 
-    /**
-     * Create a new prescription
-     * 
-     * @param prescriptionDTO prescription data
-     * @return created Prescription entity
-     */
     @Override
-    public Prescription createPrescription(PrescriptionDTO prescriptionDTO) {
+    public Prescription createPrescription(PrescriptionCreateDTO dto) {
         try {
-            // Get current user from SecurityContext (for audit purposes)
             getCurrentUserId();
 
-            // Validate required fields
-            if (prescriptionDTO.getPrescriptionCode() == null || prescriptionDTO.getPrescriptionCode().isEmpty()) {
-                throw new IllegalArgumentException("Mã đơn thuốc không được để trống");
-            }
-
-            if (prescriptionDTO.getPatientId() == null) {
-                throw new IllegalArgumentException("ID bệnh nhân không được để trống");
-            }
-
-            if (prescriptionDTO.getDoctorId() == null) {
-                throw new IllegalArgumentException("ID bác sĩ không được để trống");
-            }
-
-            // Get patient and doctor
-            PatientProfile patient = patientProfileRepository.findById(prescriptionDTO.getPatientId())
-                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bệnh nhân"));
-
-            DocInfo doctor = docInfoRepository.findById(prescriptionDTO.getDoctorId())
+            DocInfo doctor = docInfoRepository.findById(dto.getDoctorId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bác sĩ"));
 
-            // Create prescription
-            Prescription prescription = new Prescription();
-            prescription.setPrescriptionCode(prescriptionDTO.getPrescriptionCode());
-            prescription.setPatientProfile(patient);
-            prescription.setDocInfo(doctor);
-            prescription.setCreatedAt(new Date());
-            prescription.setUpdatedAt(new Date());
+            Prescription prescription = Prescription.builder()
+                    .prescriptionCode(dto.getPrescriptionCode())
+                    .patientName(dto.getPatientName())
+                    .patientNationalId(dto.getPatientNationalId())
+                    .patientDob(dto.getPatientDob())
+                    .patientGender(dto.getPatientGender())
+                    .patientAddress(dto.getPatientAddress())
+                    .patientPhone(dto.getPatientPhone())
+                    .diagnosis(dto.getDiagnosis())
+                    .conclusion(dto.getConclusion())
+                    .treatmentType(dto.getTreatmentType())
+                    .heightCm(dto.getHeightCm())
+                    .weightKg(dto.getWeightKg())
+                    .note(dto.getNote())
+                    .docInfo(doctor)
+                    .createdAt(new Date())
+                    .updatedAt(new Date())
+                    .build();
 
             Prescription saved = prescriptionRepository.save(prescription);
-            log.info("Prescription created successfully with ID: {} and code: {}", saved.getId(),
-                    saved.getPrescriptionCode());
+            log.info("Prescription created: ID={}, Code={}, Patient={}", 
+                    saved.getId(), saved.getPrescriptionCode(), saved.getPatientName());
 
             return saved;
 
@@ -157,25 +99,14 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         }
     }
 
-    /**
-     * Update prescription (must be within 1 hour of creation)
-     * 
-     * @param id                    prescription ID
-     * @param prescriptionUpdateDTO updated data
-     * @return updated Prescription entity
-     * @throws IllegalStateException if prescription is older than 1 hour
-     */
     @Override
-    public Prescription updatePrescription(Long id, PrescriptionUpdateDTO prescriptionUpdateDTO) {
+    public Prescription updatePrescription(Long id, PrescriptionUpdateDTO dto) {
         try {
-            // Get current user from SecurityContext (for audit purposes)
             getCurrentUserId();
 
-            // Find prescription to update
             Prescription prescription = prescriptionRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn thuốc"));
 
-            // Business Logic: Check if prescription was created within 1 hour
             Date currentTime = new Date();
             long diffInMillis = currentTime.getTime() - prescription.getCreatedAt().getTime();
             long diffInHours = TimeUnit.MILLISECONDS.toHours(diffInMillis);
@@ -186,60 +117,13 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                         "Không thể chỉnh sửa đơn thuốc. Chỉ được phép chỉnh sửa trong vòng 1 giờ sau khi tạo");
             }
 
-            // Update patient if provided
-            if (prescriptionUpdateDTO.getPatientId() != null) {
-                PatientProfile patient = patientProfileRepository.findById(prescriptionUpdateDTO.getPatientId())
-                        .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bệnh nhân"));
-                prescription.setPatientProfile(patient);
-            }
-
-            // Update doctor if provided
-            if (prescriptionUpdateDTO.getDoctorId() != null) {
-                DocInfo doctor = docInfoRepository.findById(prescriptionUpdateDTO.getDoctorId())
-                        .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bác sĩ"));
-                prescription.setDocInfo(doctor);
-            }
-
-            // Update note if provided
-            if (prescriptionUpdateDTO.getNote() != null) {
-                prescription.setNote(prescriptionUpdateDTO.getNote());
-            }
-
             prescription.setUpdatedAt(currentTime);
-
-            // Update prescription details if provided
-            if (prescriptionUpdateDTO.getPrescriptionDetails() != null
-                    && !prescriptionUpdateDTO.getPrescriptionDetails().isEmpty()) {
-                // Delete existing prescription details
-                List<PrescriptionDetail> existingDetails = prescriptionDetailRepository
-                        .findByPrescriptionId(prescription.getId());
-                prescriptionDetailRepository.deleteAll(existingDetails);
-
-                // Create new prescription details
-                List<PrescriptionDetail> newDetails = new ArrayList<>();
-                for (PrescriptionUpdateDTO.PrescriptionDetailDTO detailDTO : prescriptionUpdateDTO
-                        .getPrescriptionDetails()) {
-                    MedicineInfo medicine = medicineInfoRepository.findById(detailDTO.getMedicineId())
-                            .orElseThrow(() -> new EntityNotFoundException(
-                                    "Không tìm thấy thuốc với ID: " + detailDTO.getMedicineId()));
-
-                    PrescriptionDetail detail = new PrescriptionDetail();
-                    detail.setPrescription(prescription);
-                    detail.setMedicineInfo(medicine);
-                    detail.setQuantity(detailDTO.getQuantity());
-                    detail.setUsageInstructions(detailDTO.getUsageInstructions());
-                    newDetails.add(detail);
-                }
-                prescriptionDetailRepository.saveAll(newDetails);
-            }
-
             Prescription updated = prescriptionRepository.save(prescription);
-            log.info("Prescription updated successfully with ID: {}", updated.getId());
+            log.info("Prescription updated: ID={}", id);
 
             return updated;
 
-        } catch (EntityNotFoundException | IllegalStateException e) {
-            log.warn("Failed to update prescription: {}", e.getMessage());
+        } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {
             log.error("Error updating prescription", e);
@@ -247,57 +131,27 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         }
     }
 
-    /**
-     * Delete prescription and associated prescription details
-     * 
-     * @param prescriptionId prescription ID
-     */
     @Override
     public void deletePrescription(Long prescriptionId) {
         try {
-            // Find prescription to delete
             Prescription prescription = prescriptionRepository.findById(prescriptionId)
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn thuốc"));
 
-            // Delete all prescription details first (foreign key constraint)
-            List<PrescriptionDetail> prescriptionDetails = prescriptionDetailRepository
-                    .findByPrescriptionId(prescriptionId);
-            if (!prescriptionDetails.isEmpty()) {
-                prescriptionDetailRepository.deleteAll(prescriptionDetails);
-            }
-
-            // Delete the prescription
             prescriptionRepository.delete(prescription);
-            log.info("Prescription deleted successfully with ID: {}", prescriptionId);
+            log.info("Prescription deleted: ID={}", prescriptionId);
 
-        } catch (EntityNotFoundException e) {
-            log.warn("Failed to delete prescription: {}", e.getMessage());
-            throw e;
         } catch (Exception e) {
             log.error("Error deleting prescription", e);
             throw new RuntimeException("Lỗi khi xóa đơn thuốc: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Extract current user ID from SecurityContext
-     * 
-     * @return current user ID
-     * @throws RuntimeException if no user is authenticated
-     */
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new RuntimeException("Không tìm thấy người dùng được xác thực");
+        if (auth == null || !(auth.getPrincipal() instanceof UserPrincipal)) {
+            throw new RuntimeException("Không thể xác định người dùng hiện tại");
         }
-
-        // Extract UserPrincipal from JWT token
-        Object principal = auth.getPrincipal();
-        if (principal instanceof UserPrincipal) {
-            return ((UserPrincipal) principal).getId();
-        }
-
-        log.warn("Principal is not UserPrincipal: {}", principal.getClass().getName());
-        throw new RuntimeException("Không thể xác định ID người dùng hiện tại");
+        return ((UserPrincipal) auth.getPrincipal()).getId();
     }
 }
+

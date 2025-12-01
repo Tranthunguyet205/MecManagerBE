@@ -24,12 +24,14 @@ help:
 	@echo "  $(GREEN)clean$(NC)       - Clean build artifacts"
 	@echo "  $(GREEN)test$(NC)        - Run tests"
 	@echo "  $(GREEN)stop$(NC)        - Stop running Java processes"
+	@echo "  $(GREEN)reset-db$(NC)    - Drop all tables and reset database schema"
 	@echo "  $(GREEN)docs$(NC)        - Generate API documentation"
 	@echo "  $(GREEN)help$(NC)        - Show this help message"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make rebuild    # Recommended for fresh start"
 	@echo "  make run        # Just run the app"
+	@echo "  make reset-db   # Drop all tables (be careful!)"
 	@echo "  make test       # Run unit tests"
 
 verify-java:
@@ -78,6 +80,19 @@ stop:
 	@pkill -f "java.*spring-boot" || echo "No running Java processes found"
 	@sleep 1
 	@echo "$(GREEN)✓ Stopped!$(NC)"
+
+reset-db:
+	@echo "$(RED)WARNING: This will DROP ALL TABLES in vaccine_management database!$(NC)"
+	@echo "$(RED)Press Ctrl+C to cancel, or wait 3 seconds to continue...$(NC)"
+	@sleep 3
+	@echo "$(BLUE)Connecting to MySQL and dropping all tables...$(NC)"
+	@mysql -h localhost -u root -pQuan@762003 vaccine_management -e \
+		"SET FOREIGN_KEY_CHECKS = 0; \
+		SELECT CONCAT('DROP TABLE IF EXISTS \`', TABLE_NAME, '\`;') FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'vaccine_management' INTO OUTFILE '/tmp/drop_tables.sql'; \
+		SOURCE /tmp/drop_tables.sql; \
+		SET FOREIGN_KEY_CHECKS = 1;" 2>/dev/null || echo "$(RED)✗ Failed - ensure MySQL is running and credentials are correct$(NC)"
+	@echo "$(GREEN)✓ Database reset complete!$(NC)"
+	@echo "$(BLUE)Tables will be recreated when you run 'make rebuild'$(NC)"
 
 install-deps:
 	@echo "$(BLUE)Installing Maven wrapper...$(NC)"

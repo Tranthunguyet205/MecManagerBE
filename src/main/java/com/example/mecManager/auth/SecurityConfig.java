@@ -1,6 +1,6 @@
 package com.example.mecManager.auth;
 
-import com.example.mecManager.Common.AppConstants;
+import com.example.mecManager.common.constants.AppConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;

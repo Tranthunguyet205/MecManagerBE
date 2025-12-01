@@ -1,6 +1,6 @@
 package com.example.mecManager.repository;
 
-import com.example.mecManager.model.PrescriptionDetail;
+import com.example.mecManager.model.entity.PrescriptionDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

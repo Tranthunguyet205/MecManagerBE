@@ -8,14 +8,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.mecManager.Common.AppConstants;
-import com.example.mecManager.Common.enums.RoleEnum;
+import com.example.mecManager.common.constants.AppConstants;
+import com.example.mecManager.common.enums.RoleEnum;
+import com.example.mecManager.common.enums.UserStatusEnum;
 import com.example.mecManager.auth.JwtUtils;
-import com.example.mecManager.model.LoginRequest;
-import com.example.mecManager.model.LoginResponse;
-import com.example.mecManager.model.RegisterRequest;
-import com.example.mecManager.model.User;
-import com.example.mecManager.model.UserResponse;
+import com.example.mecManager.dto.request.LoginRequest;
+import com.example.mecManager.dto.response.LoginResponse;
+import com.example.mecManager.dto.request.RegisterRequest;
+import com.example.mecManager.model.entity.User;
+import com.example.mecManager.dto.response.UserResponse;
 import com.example.mecManager.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -53,7 +54,7 @@ public class UserServiceImpl implements UserService {
         user.setFullName(username);
         user.setPhone(request.getPhone());
         user.setRole(role);
-        user.setIsActive(true);
+        user.setStatus(user.getRole() == RoleEnum.ADMIN ? UserStatusEnum.APPROVED : UserStatusEnum.PENDING);
         user.setProfilePictureUrl(AppConstants.URL.IMG_URL);
         user.setGender(AppConstants.GENDER.OTHER);
         user.setCreatedAt(new Date());
@@ -80,7 +81,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không chính xác");
         }
 
-        if (!user.getIsActive()) {
+        if (user.getStatus() != UserStatusEnum.APPROVED) {
             throw new RuntimeException("Tài khoản chưa được phê duyệt. Vui lòng liên hệ admin.");
         }
 
@@ -130,9 +131,21 @@ public class UserServiceImpl implements UserService {
                 .phone(user.getPhone())
                 .gender(user.getGender())
                 .role(user.getRole().name())
-                .isActive(user.getIsActive())
+                .status(user.getStatus().name())
                 .profilePictureUrl(user.getProfilePictureUrl())
                 .createdAt(user.getCreatedAt())
                 .build();
+    }
+
+    @Override
+    public UserResponse updateUserStatus(Long userId, UserStatusEnum status) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+        
+        user.setStatus(status);
+        user.setUpdatedAt(new Date());
+        
+        User updatedUser = userRepository.save(user);
+        return mapToUserResponse(updatedUser);
     }
 }

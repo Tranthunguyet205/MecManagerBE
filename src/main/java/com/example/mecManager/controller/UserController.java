@@ -7,16 +7,18 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.mecManager.Common.ApiResponse;
-import com.example.mecManager.Common.AppConstants;
-import com.example.mecManager.model.LoginRequest;
-import com.example.mecManager.model.LoginResponse;
-import com.example.mecManager.model.RegisterRequest;
-import com.example.mecManager.model.UserResponse;
+import com.example.mecManager.common.response.ApiResponse;
+import com.example.mecManager.common.constants.AppConstants;
+import com.example.mecManager.dto.request.LoginRequest;
+import com.example.mecManager.dto.response.LoginResponse;
+import com.example.mecManager.dto.request.RegisterRequest;
+import com.example.mecManager.dto.request.UpdateStatusRequest;
+import com.example.mecManager.dto.response.UserResponse;
 import com.example.mecManager.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -135,6 +137,39 @@ public class UserController {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error(401, e.getMessage()));
+        }
+    }
+
+    /**
+     * Admin updates user status (approve/reject doctor)
+     * 
+     * @param userId User ID to update
+     * @param request Request with new status
+     * @return ApiResponse with updated user
+     */
+    @PutMapping("/users/{userId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update user status", description = "Admin updates user status (PENDING/APPROVED/REJECTED). Admin only.")
+    @SecurityRequirement(name = "bearer-jwt")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Status updated successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Access denied - Admin only"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<ApiResponse<UserResponse>> updateUserStatus(
+            @PathVariable Long userId,
+            @Valid @RequestBody UpdateStatusRequest request) {
+        try {
+            UserResponse userResponse = userService.updateUserStatus(userId, request.getStatus());
+            return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái thành công", userResponse));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(404, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(500, "Lỗi hệ thống"));
         }
     }
 }

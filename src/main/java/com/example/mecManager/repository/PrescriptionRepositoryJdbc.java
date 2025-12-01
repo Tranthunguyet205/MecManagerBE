@@ -1,8 +1,8 @@
 package com.example.mecManager.repository;
 
-import com.example.mecManager.model.Prescription;
-import com.example.mecManager.model.PrescriptionDTO;
-import com.example.mecManager.model.PrescriptionResDTO;
+import com.example.mecManager.model.entity.Prescription;
+import com.example.mecManager.dto.PrescriptionDTO;
+import com.example.mecManager.dto.PrescriptionResDTO;
 
 import java.util.List;
 

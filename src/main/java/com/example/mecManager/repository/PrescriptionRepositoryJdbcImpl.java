@@ -8,8 +8,8 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import com.example.mecManager.model.PrescriptionDTO;
-import com.example.mecManager.model.PrescriptionResDTO;
+import com.example.mecManager.dto.PrescriptionDTO;
+import com.example.mecManager.dto.PrescriptionResDTO;
 
 @Service
 public class PrescriptionRepositoryJdbcImpl implements PrescriptionRepositoryJdbc {

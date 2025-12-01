@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.mecManager.Common.ApiResponse;
-import com.example.mecManager.Common.AppConstants;
-import com.example.mecManager.model.MedicineInfoDTO;
+import com.example.mecManager.common.response.ApiResponse;
+import com.example.mecManager.common.constants.AppConstants;
+import com.example.mecManager.dto.MedicineInfoDTO;
 import com.example.mecManager.service.MedicineService;
 
 import jakarta.validation.Valid;

@@ -14,11 +14,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.mecManager.model.DocInfo;
-import com.example.mecManager.model.DocInfoDTO;
-import com.example.mecManager.model.DocInfoUpdateDTO;
-import com.example.mecManager.model.User;
-import com.example.mecManager.model.UserPrincipal;
+import com.example.mecManager.model.entity.DocInfo;
+import com.example.mecManager.dto.DocInfoDTO;
+import com.example.mecManager.dto.DocInfoUpdateDTO;
+import com.example.mecManager.model.entity.User;
+import com.example.mecManager.auth.UserPrincipal;
 import com.example.mecManager.repository.DocInfoRepository;
 import com.example.mecManager.repository.PrescriptionRepository;
 import com.example.mecManager.repository.UserRepository;

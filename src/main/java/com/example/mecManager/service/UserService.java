@@ -1,9 +1,10 @@
 package com.example.mecManager.service;
 
-import com.example.mecManager.model.LoginRequest;
-import com.example.mecManager.model.LoginResponse;
-import com.example.mecManager.model.RegisterRequest;
-import com.example.mecManager.model.UserResponse;
+import com.example.mecManager.common.enums.UserStatusEnum;
+import com.example.mecManager.dto.request.LoginRequest;
+import com.example.mecManager.dto.response.LoginResponse;
+import com.example.mecManager.dto.request.RegisterRequest;
+import com.example.mecManager.dto.response.UserResponse;
 
 public interface UserService {
     /**
@@ -36,4 +37,13 @@ public interface UserService {
      * @return UserResponse with current user information
      */
     UserResponse getCurrentUserProfile();
+
+    /**
+     * Update user status (Admin only)
+     * 
+     * @param userId User ID to update
+     * @param status New status (PENDING/APPROVED/REJECTED)
+     * @return UserResponse with updated user information
+     */
+    UserResponse updateUserStatus(Long userId, UserStatusEnum status);
 }

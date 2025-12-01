@@ -1,7 +1,7 @@
 package com.example.mecManager.service;
 
-import com.example.mecManager.model.MedicineInfo;
-import com.example.mecManager.model.MedicineInfoDTO;
+import com.example.mecManager.model.entity.MedicineInfo;
+import com.example.mecManager.dto.MedicineInfoDTO;
 
 import jakarta.persistence.EntityNotFoundException;
 
