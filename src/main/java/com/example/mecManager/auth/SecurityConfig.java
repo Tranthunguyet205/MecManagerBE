@@ -32,8 +32,7 @@ public class SecurityConfig {
                         // All other endpoints - authentication required
                         // Role-based authorization is handled by @PreAuthorize on controllers
                         .anyRequest().authenticated())
-
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtFilter, org.springframework.security.web.access.intercept.FilterSecurityInterceptor.class)
                 .build();
     }
 
@@ -48,10 +47,12 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(
                 Arrays.asList("http://localhost:4200", "http://localhost:5173", "http://localhost:3000"));
 
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList("*")); // Allow all headers
         configuration.setAllowCredentials(true);
-        configuration.addExposedHeader("Authorization"); // Cho phép Angular lấy JWT từ response
+        configuration.setMaxAge(3600L); // Cache preflight for 1 hour
+        configuration.addExposedHeader("Authorization");
+        configuration.addExposedHeader("Content-Type");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
