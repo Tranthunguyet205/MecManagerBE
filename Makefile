@@ -1,4 +1,4 @@
-.PHONY: help rebuild build run stop clean test docs
+.PHONY: help rebuild build run stop clean test docs reset-db reset-minio
 
 # Default shell
 SHELL := /bin/zsh
@@ -25,6 +25,7 @@ help:
 	@echo "  $(GREEN)test$(NC)        - Run tests"
 	@echo "  $(GREEN)stop$(NC)        - Stop running Java processes"
 	@echo "  $(GREEN)reset-db$(NC)    - Drop all tables and reset database schema"
+	@echo "  $(GREEN)reset-minio$(NC) - Reset MinIO (delete all buckets and objects)"
 	@echo "  $(GREEN)docs$(NC)        - Generate API documentation"
 	@echo "  $(GREEN)help$(NC)        - Show this help message"
 	@echo ""
@@ -91,6 +92,18 @@ reset-db:
 	docker exec mecmanager-mysql mysql -u root -pQuan@762003 vaccine_management -e "SET FOREIGN_KEY_CHECKS = 1;" && \
 	echo "$(GREEN)✓ Database reset complete!$(NC)" || echo "$(RED)✗ Failed - ensure MySQL Docker container (mecmanager-mysql) is running$(NC)"
 	@echo "$(BLUE)Tables will be recreated when you run 'make rebuild'$(NC)"
+
+reset-minio:
+	@echo "$(RED)WARNING: This will DELETE ALL BUCKETS and objects in MinIO!$(NC)"
+	@echo "$(RED)Press Ctrl+C to cancel, or wait 3 seconds to continue...$(NC)"
+	@sleep 3
+	@echo "$(BLUE)Resetting MinIO buckets...$(NC)"
+	@mc rm --recursive --force minio/doctor 2>/dev/null || true && \
+	mc rm --recursive --force minio/prescription 2>/dev/null || true && \
+	mc rb --force minio/doctor 2>/dev/null || true && \
+	mc rb --force minio/prescription 2>/dev/null || true && \
+	echo "$(GREEN)✓ MinIO reset complete!$(NC)" || echo "$(RED)✗ Failed - ensure MinIO is running and mc is configured$(NC)"
+	@echo "$(BLUE)Buckets will be recreated on next file upload$(NC)"
 
 install-deps:
 	@echo "$(BLUE)Installing Maven wrapper...$(NC)"
