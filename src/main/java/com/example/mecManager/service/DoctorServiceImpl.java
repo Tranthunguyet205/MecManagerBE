@@ -74,6 +74,7 @@ public class DoctorServiceImpl implements DoctorService {
             docInfo.setLicenseIssueDate(docInfoDTO.getLicenseIssueDate());
             docInfo.setLicenseIssuePlace(docInfoDTO.getLicenseIssuePlace());
             docInfo.setWorkplace(docInfoDTO.getWorkplace());
+            docInfo.setProfessionalDegree(docInfoDTO.getProfessionalDegree());
             docInfo.setPracticeCertificateUrl(docInfoDTO.getPracticeCertificateUrl());
             docInfo.setLicenseUrl(docInfoDTO.getLicenseUrl());
             docInfo.setNationalIdUrl(docInfoDTO.getNationalIdUrl());
@@ -204,6 +205,7 @@ public class DoctorServiceImpl implements DoctorService {
                             .licenseIssueDate(docInfoUpdateDTO.getLicenseIssueDate())
                             .licenseIssuePlace(docInfoUpdateDTO.getLicenseIssuePlace())
                             .workplace(docInfoUpdateDTO.getWorkplace())
+                            .professionalDegree(docInfoUpdateDTO.getProfessionalDegree())
                             .practiceCertificateUrl(docInfoUpdateDTO.getPracticeCertificateUrl())
                             .licenseUrl(docInfoUpdateDTO.getLicenseUrl())
                             .nationalIdUrl(docInfoUpdateDTO.getNationalIdUrl())
@@ -219,21 +221,55 @@ public class DoctorServiceImpl implements DoctorService {
             }
 
             // Update existing DocInfo
-            doctor.setFullName(docInfoUpdateDTO.getFullName());
-            doctor.setDob(docInfoUpdateDTO.getDob());
-            doctor.setPhone(docInfoUpdateDTO.getPhone());
-            doctor.setCccd(docInfoUpdateDTO.getCccd());
-            doctor.setCccdIssueDate(docInfoUpdateDTO.getCccdIssueDate());
-            doctor.setCccdIssuePlace(docInfoUpdateDTO.getCccdIssuePlace());
-            doctor.setCurrentAddress(docInfoUpdateDTO.getCurrentAddress());
-            doctor.setEmail(docInfoUpdateDTO.getEmail());
-            doctor.setPracticeCertificateNo(docInfoUpdateDTO.getPracticeCertificateNo());
-            doctor.setPracticeCertificateIssueDate(docInfoUpdateDTO.getPracticeCertificateIssueDate());
-            doctor.setPracticeCertificateIssuePlace(docInfoUpdateDTO.getPracticeCertificateIssuePlace());
-            doctor.setLicenseNo(docInfoUpdateDTO.getLicenseNo());
-            doctor.setLicenseIssueDate(docInfoUpdateDTO.getLicenseIssueDate());
-            doctor.setLicenseIssuePlace(docInfoUpdateDTO.getLicenseIssuePlace());
-            doctor.setWorkplace(docInfoUpdateDTO.getWorkplace());
+            // Only update fields that are provided (non-null)
+            if (docInfoUpdateDTO.getFullName() != null) {
+                doctor.setFullName(docInfoUpdateDTO.getFullName());
+            }
+            if (docInfoUpdateDTO.getDob() != null) {
+                doctor.setDob(docInfoUpdateDTO.getDob());
+            }
+            if (docInfoUpdateDTO.getPhone() != null) {
+                doctor.setPhone(docInfoUpdateDTO.getPhone());
+            }
+            if (docInfoUpdateDTO.getCccd() != null) {
+                doctor.setCccd(docInfoUpdateDTO.getCccd());
+            }
+            if (docInfoUpdateDTO.getCccdIssueDate() != null) {
+                doctor.setCccdIssueDate(docInfoUpdateDTO.getCccdIssueDate());
+            }
+            if (docInfoUpdateDTO.getCccdIssuePlace() != null) {
+                doctor.setCccdIssuePlace(docInfoUpdateDTO.getCccdIssuePlace());
+            }
+            if (docInfoUpdateDTO.getCurrentAddress() != null) {
+                doctor.setCurrentAddress(docInfoUpdateDTO.getCurrentAddress());
+            }
+            if (docInfoUpdateDTO.getEmail() != null) {
+                doctor.setEmail(docInfoUpdateDTO.getEmail());
+            }
+            if (docInfoUpdateDTO.getPracticeCertificateNo() != null) {
+                doctor.setPracticeCertificateNo(docInfoUpdateDTO.getPracticeCertificateNo());
+            }
+            if (docInfoUpdateDTO.getPracticeCertificateIssueDate() != null) {
+                doctor.setPracticeCertificateIssueDate(docInfoUpdateDTO.getPracticeCertificateIssueDate());
+            }
+            if (docInfoUpdateDTO.getPracticeCertificateIssuePlace() != null) {
+                doctor.setPracticeCertificateIssuePlace(docInfoUpdateDTO.getPracticeCertificateIssuePlace());
+            }
+            if (docInfoUpdateDTO.getLicenseNo() != null) {
+                doctor.setLicenseNo(docInfoUpdateDTO.getLicenseNo());
+            }
+            if (docInfoUpdateDTO.getLicenseIssueDate() != null) {
+                doctor.setLicenseIssueDate(docInfoUpdateDTO.getLicenseIssueDate());
+            }
+            if (docInfoUpdateDTO.getLicenseIssuePlace() != null) {
+                doctor.setLicenseIssuePlace(docInfoUpdateDTO.getLicenseIssuePlace());
+            }
+            if (docInfoUpdateDTO.getWorkplace() != null) {
+                doctor.setWorkplace(docInfoUpdateDTO.getWorkplace());
+            }
+            if (docInfoUpdateDTO.getProfessionalDegree() != null) {
+                doctor.setProfessionalDegree(docInfoUpdateDTO.getProfessionalDegree());
+            }
 
             // Update file URLs if provided
             if (docInfoUpdateDTO.getPracticeCertificateUrl() != null) {
@@ -301,6 +337,7 @@ public class DoctorServiceImpl implements DoctorService {
                 .licenseIssueDate(docInfo.getLicenseIssueDate())
                 .licenseIssuePlace(docInfo.getLicenseIssuePlace())
                 .workplace(docInfo.getWorkplace())
+                .professionalDegree(docInfo.getProfessionalDegree())
                 .practiceCertificateUrl(docInfo.getPracticeCertificateUrl())
                 .licenseUrl(docInfo.getLicenseUrl())
                 .nationalIdUrl(docInfo.getNationalIdUrl())

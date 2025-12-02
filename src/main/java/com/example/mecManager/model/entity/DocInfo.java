@@ -77,6 +77,9 @@ public class DocInfo {
     @Column(name = "workplace")
     private String workplace; // co so lam viec
 
+    @Column(name = "professional_degree")
+    private String professionalDegree; // van bang chuyen mon
+
     @Column(name = "practice_certificate_url", nullable = true)
     private String practiceCertificateUrl;
 

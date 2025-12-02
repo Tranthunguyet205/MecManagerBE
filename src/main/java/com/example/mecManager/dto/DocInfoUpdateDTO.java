@@ -2,8 +2,6 @@ package com.example.mecManager.dto;
 
 import java.util.Date;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,49 +20,37 @@ public class DocInfoUpdateDTO {
   // User ID (required for creation, optional for updates)
   private Long userId;
 
-  @NotBlank(message = "Tên đầy đủ không được để trống")
-  private String fullName;
+  private String fullName; // optional for update
 
-  @NotNull(message = "Ngày sinh không được để trống")
-  private Date dob;
+  private Date dob; // optional for update
 
-  @NotBlank(message = "Số điện thoại không được để trống")
-  private String phone;
+  private String phone; // optional for update
 
-  @NotBlank(message = "CCCD không được để trống")
-  private String cccd;
+  private String cccd; // optional for update
 
-  @NotNull(message = "Ngày cấp CCCD không được để trống")
-  private Date cccdIssueDate;
+  private Date cccdIssueDate; // optional for update
 
-  @NotBlank(message = "Nơi cấp CCCD không được để trống")
-  private String cccdIssuePlace;
+  private String cccdIssuePlace; // optional for update
 
-  @NotBlank(message = "Địa chỉ hiện tại không được để trống")
-  private String currentAddress;
+  private String currentAddress; // optional for update
 
-  @NotBlank(message = "Email không được để trống")
-  private String email;
+  private String email; // optional for update
 
-  @NotBlank(message = "Số chứng chỉ hành nghề không được để trống")
-  private String practiceCertificateNo;
+  private String practiceCertificateNo; // optional for update
 
-  @NotNull(message = "Ngày cấp chứng chỉ hành nghề không được để trống")
-  private Date practiceCertificateIssueDate;
+  private Date practiceCertificateIssueDate; // optional for update
 
-  @NotBlank(message = "Nơi cấp chứng chỉ hành nghề không được để trống")
-  private String practiceCertificateIssuePlace;
+  private String practiceCertificateIssuePlace; // optional for update
 
-  @NotBlank(message = "Số giấy phép hành nghề không được để trống")
-  private String licenseNo;
+  private String licenseNo; // optional for update
 
-  @NotNull(message = "Ngày cấp giấy phép hành nghề không được để trống")
-  private Date licenseIssueDate;
+  private Date licenseIssueDate; // optional for update
 
-  @NotBlank(message = "Nơi cấp giấy phép hành nghề không được để trống")
-  private String licenseIssuePlace;
+  private String licenseIssuePlace; // optional for update
 
   private String workplace; // co so lam viec (optional)
+
+  private String professionalDegree; // van bang chuyen mon (optional)
 
   // File URLs - optional, set by controller when files are uploaded
   private String practiceCertificateUrl;

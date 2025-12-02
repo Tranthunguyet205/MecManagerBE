@@ -80,6 +80,7 @@ public class DoctorController {
                     .licenseIssueDate(docInfoDTO.getLicenseIssueDate())
                     .licenseIssuePlace(docInfoDTO.getLicenseIssuePlace())
                     .workplace(docInfoDTO.getWorkplace())
+                    .professionalDegree(docInfoDTO.getProfessionalDegree())
                     .practiceCertificateUrl(docInfoDTO.getPracticeCertificateUrl())
                     .licenseUrl(docInfoDTO.getLicenseUrl())
                     .nationalIdUrl(docInfoDTO.getNationalIdUrl())
