@@ -74,6 +74,9 @@ public class DocInfo {
     @Column(name = "license_issue_place", nullable = false)
     private String licenseIssuePlace;// noi cap giay phep hanh nghe
 
+    @Column(name = "workplace")
+    private String workplace; // co so lam viec
+
     @Column(name = "practice_certificate_url", nullable = true)
     private String practiceCertificateUrl;
 

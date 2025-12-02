@@ -28,6 +28,7 @@ public class DocInfoDTO {
   private String licenseNo;
   private Date licenseIssueDate;
   private String licenseIssuePlace;
+  private String workplace;
   private String practiceCertificateUrl;
   private String licenseUrl;
   private String nationalIdUrl;

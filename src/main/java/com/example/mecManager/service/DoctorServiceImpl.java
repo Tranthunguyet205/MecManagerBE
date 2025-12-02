@@ -73,6 +73,10 @@ public class DoctorServiceImpl implements DoctorService {
             docInfo.setLicenseNo(docInfoDTO.getLicenseNo());
             docInfo.setLicenseIssueDate(docInfoDTO.getLicenseIssueDate());
             docInfo.setLicenseIssuePlace(docInfoDTO.getLicenseIssuePlace());
+            docInfo.setWorkplace(docInfoDTO.getWorkplace());
+            docInfo.setPracticeCertificateUrl(docInfoDTO.getPracticeCertificateUrl());
+            docInfo.setLicenseUrl(docInfoDTO.getLicenseUrl());
+            docInfo.setNationalIdUrl(docInfoDTO.getNationalIdUrl());
             docInfo.setCreatedAt(new Date());
             docInfo.setCreatedBy(creator);
 
@@ -116,28 +120,59 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     @Transactional(readOnly = true)
-    public Object searchDoctors(
-            String practiceCertificateNo, String licenseNo, Integer page, Integer pageSize) {
+    public Object getDoctors(
+            String search, String practiceCertificateNo, String licenseNo, Integer page, Integer pageSize) {
+        
+        // Search by name or email (single search field)
+        if (search != null && !search.trim().isEmpty()) {
+            List<DocInfo> doctors = docInfoRepository.findBySearchTerm(search.trim());
+            if (doctors.isEmpty()) {
+                throw new RuntimeException("Không tìm thấy bác sĩ với tên hoặc email: " + search);
+            }
+            return buildSearchResultResponse(doctors);
+        }
+
         // Search by practice certificate number
         if (practiceCertificateNo != null && !practiceCertificateNo.trim().isEmpty()) {
             DocInfo doctor = docInfoRepository.findByPracticeCertificateNo(practiceCertificateNo.trim());
-            if (doctor == null) {
-                throw new RuntimeException("Không tìm thấy bác sĩ với chứng chỉ: " + practiceCertificateNo);
-            }
-            return mapToDTO(doctor);
+            return buildSingleResultResponse(doctor, "Không tìm thấy bác sĩ với chứng chỉ: " + practiceCertificateNo);
         }
 
         // Search by license number
         if (licenseNo != null && !licenseNo.trim().isEmpty()) {
             DocInfo doctor = docInfoRepository.findByLicenseNo(licenseNo.trim());
-            if (doctor == null) {
-                throw new RuntimeException("Không tìm thấy bác sĩ với giấy phép: " + licenseNo);
-            }
-            return mapToDTO(doctor);
+            return buildSingleResultResponse(doctor, "Không tìm thấy bác sĩ với giấy phép: " + licenseNo);
         }
 
         // If no search criteria, return all doctors
         return getAllDoctors(page, pageSize);
+    }
+
+    private Map<String, Object> buildSearchResultResponse(List<DocInfo> doctors) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", doctors.stream().map(this::mapToDTO).toList());
+        response.put("page", 0);
+        response.put("size", doctors.size());
+        response.put("totalElements", (long) doctors.size());
+        response.put("totalPages", 1);
+        response.put("isFirst", true);
+        response.put("isLast", true);
+        return response;
+    }
+
+    private Map<String, Object> buildSingleResultResponse(DocInfo doctor, String errorMessage) {
+        if (doctor == null) {
+            throw new RuntimeException(errorMessage);
+        }
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", List.of(mapToDTO(doctor)));
+        response.put("page", 0);
+        response.put("size", 1);
+        response.put("totalElements", 1L);
+        response.put("totalPages", 1);
+        response.put("isFirst", true);
+        response.put("isLast", true);
+        return response;
     }
 
     @Override
@@ -177,6 +212,7 @@ public class DoctorServiceImpl implements DoctorService {
                             .licenseNo(docInfoUpdateDTO.getLicenseNo())
                             .licenseIssueDate(docInfoUpdateDTO.getLicenseIssueDate())
                             .licenseIssuePlace(docInfoUpdateDTO.getLicenseIssuePlace())
+                            .workplace(docInfoUpdateDTO.getWorkplace())
                             .practiceCertificateUrl(docInfoUpdateDTO.getPracticeCertificateUrl())
                             .licenseUrl(docInfoUpdateDTO.getLicenseUrl())
                             .nationalIdUrl(docInfoUpdateDTO.getNationalIdUrl())
@@ -206,6 +242,7 @@ public class DoctorServiceImpl implements DoctorService {
             doctor.setLicenseNo(docInfoUpdateDTO.getLicenseNo());
             doctor.setLicenseIssueDate(docInfoUpdateDTO.getLicenseIssueDate());
             doctor.setLicenseIssuePlace(docInfoUpdateDTO.getLicenseIssuePlace());
+            doctor.setWorkplace(docInfoUpdateDTO.getWorkplace());
 
             // Update file URLs if provided
             if (docInfoUpdateDTO.getPracticeCertificateUrl() != null) {
@@ -272,6 +309,7 @@ public class DoctorServiceImpl implements DoctorService {
                 .licenseNo(docInfo.getLicenseNo())
                 .licenseIssueDate(docInfo.getLicenseIssueDate())
                 .licenseIssuePlace(docInfo.getLicenseIssuePlace())
+                .workplace(docInfo.getWorkplace())
                 .practiceCertificateUrl(docInfo.getPracticeCertificateUrl())
                 .licenseUrl(docInfo.getLicenseUrl())
                 .nationalIdUrl(docInfo.getNationalIdUrl())

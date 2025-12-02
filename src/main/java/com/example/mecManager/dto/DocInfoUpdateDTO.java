@@ -64,6 +64,8 @@ public class DocInfoUpdateDTO {
   @NotBlank(message = "Nơi cấp giấy phép hành nghề không được để trống")
   private String licenseIssuePlace;
 
+  private String workplace; // co so lam viec (optional)
+
   // File URLs - optional, set by controller when files are uploaded
   private String practiceCertificateUrl;
   private String licenseUrl;

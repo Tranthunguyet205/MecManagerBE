@@ -79,6 +79,7 @@ public class DoctorController {
                     .licenseNo(docInfoDTO.getLicenseNo())
                     .licenseIssueDate(docInfoDTO.getLicenseIssueDate())
                     .licenseIssuePlace(docInfoDTO.getLicenseIssuePlace())
+                    .workplace(docInfoDTO.getWorkplace())
                     .practiceCertificateUrl(docInfoDTO.getPracticeCertificateUrl())
                     .licenseUrl(docInfoDTO.getLicenseUrl())
                     .nationalIdUrl(docInfoDTO.getNationalIdUrl())
@@ -119,53 +120,30 @@ public class DoctorController {
     }
 
     /**
-     * Get all doctors with pagination
+     * Get all doctors with optional search filters
      * 
-     * @param page     Page number (0-based, default: 0)
-     * @param pageSize Number of items per page (default: 10)
+     * @param search                Optional search term (searches name and email)
+     * @param practiceCertificateNo Optional practice certificate number to search
+     * @param licenseNo             Optional license number to search
+     * @param page                  Page number (0-based, default: 0)
+     * @param pageSize              Number of items per page (default: 10)
      * @return ApiResponse with list of doctors
      */
     @GetMapping
-    @Operation(summary = "Get all doctors", description = "Retrieve all doctors with pagination support")
+    @Operation(summary = "Get doctors", description = "Retrieve doctors with optional search filters and pagination support. Search field searches name and email.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Doctors retrieved successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Doctor not found"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "System error")
     })
-    public ResponseEntity<ApiResponse<?>> getAllDoctors(
-            @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        try {
-            var result = doctorService.getAllDoctors(page, pageSize);
-            return ResponseEntity.ok(ApiResponse.success(result));
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error(500, e.getMessage()));
-        }
-    }
-
-    /**
-     * Search doctors by criteria
-     * 
-     * @param practiceCertificateNo Practice certificate number (optional)
-     * @param licenseNo             License number (optional)
-     * @param page                  Page number (0-based)
-     * @param pageSize              Items per page
-     * @return ApiResponse with search results
-     */
-    @GetMapping("/search")
-    @Operation(summary = "Search doctors", description = "Search doctors by practice certificate number or license number")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Search completed successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Doctor not found")
-    })
-    public ResponseEntity<ApiResponse<?>> searchDoctors(
+    public ResponseEntity<ApiResponse<?>> getDoctors(
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) String practiceCertificateNo,
             @RequestParam(required = false) String licenseNo,
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer pageSize) {
         try {
-            var result = doctorService.searchDoctors(practiceCertificateNo, licenseNo, page, pageSize);
+            var result = doctorService.getDoctors(search, practiceCertificateNo, licenseNo, page, pageSize);
             return ResponseEntity.ok(ApiResponse.success(result));
         } catch (Exception e) {
             return ResponseEntity

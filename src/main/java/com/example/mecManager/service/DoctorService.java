@@ -30,16 +30,17 @@ public interface DoctorService {
     Object getAllDoctors(Integer page, Integer pageSize);
 
     /**
-     * Search doctors by criteria
+     * Get doctors with optional search filters
      *
-     * @param practiceCertificateNo Practice certificate number
-     * @param licenseNo             License number
-     * @param page                  Page number
+     * @param search                Search term (searches name and email)
+     * @param practiceCertificateNo Practice certificate number (optional)
+     * @param licenseNo             License number (optional)
+     * @param page                  Page number (0-based)
      * @param pageSize              Items per page
-     * @return Search results
+     * @return Paginated result with optional filter applied
      */
-    Object searchDoctors(
-            String practiceCertificateNo, String licenseNo, Integer page, Integer pageSize);
+    Object getDoctors(
+            String search, String practiceCertificateNo, String licenseNo, Integer page, Integer pageSize);
 
     /**
      * Update doctor information
