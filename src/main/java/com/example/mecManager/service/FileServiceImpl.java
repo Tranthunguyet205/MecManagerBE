@@ -14,6 +14,7 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.RemoveObjectsArgs;
+import io.minio.SetBucketPolicyArgs;
 import io.minio.messages.DeleteObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,6 +97,24 @@ public class FileServiceImpl implements FileService {
     if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build())) {
       minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
       log.info("Bucket created: {}", bucket);
+      
+      // Set public read policy for the bucket
+      String policy = "{\n" +
+        "  \"Version\": \"2012-10-17\",\n" +
+        "  \"Statement\": [\n" +
+        "    {\n" +
+        "      \"Effect\": \"Allow\",\n" +
+        "      \"Principal\": \"*\",\n" +
+        "      \"Action\": \"s3:GetObject\",\n" +
+        "      \"Resource\": \"arn:aws:s3:::" + bucket + "/*\"\n" +
+        "    }\n" +
+        "  ]\n" +
+        "}";
+      minioClient.setBucketPolicy(SetBucketPolicyArgs.builder()
+          .bucket(bucket)
+          .config(policy)
+          .build());
+      log.info("Bucket policy set to public read for: {}", bucket);
     }
   }
 }
