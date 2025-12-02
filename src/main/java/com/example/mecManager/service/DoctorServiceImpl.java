@@ -134,14 +134,20 @@ public class DoctorServiceImpl implements DoctorService {
 
         // Search by practice certificate number
         if (practiceCertificateNo != null && !practiceCertificateNo.trim().isEmpty()) {
-            DocInfo doctor = docInfoRepository.findByPracticeCertificateNo(practiceCertificateNo.trim());
-            return buildSingleResultResponse(doctor, "Không tìm thấy bác sĩ với chứng chỉ: " + practiceCertificateNo);
+            List<DocInfo> doctors = docInfoRepository.findByPracticeCertificateNo(practiceCertificateNo.trim());
+            if (doctors.isEmpty()) {
+                throw new RuntimeException("Không tìm thấy bác sĩ với chứng chỉ: " + practiceCertificateNo);
+            }
+            return buildSearchResultResponse(doctors);
         }
 
         // Search by license number
         if (licenseNo != null && !licenseNo.trim().isEmpty()) {
-            DocInfo doctor = docInfoRepository.findByLicenseNo(licenseNo.trim());
-            return buildSingleResultResponse(doctor, "Không tìm thấy bác sĩ với giấy phép: " + licenseNo);
+            List<DocInfo> doctors = docInfoRepository.findByLicenseNo(licenseNo.trim());
+            if (doctors.isEmpty()) {
+                throw new RuntimeException("Không tìm thấy bác sĩ với giấy phép: " + licenseNo);
+            }
+            return buildSearchResultResponse(doctors);
         }
 
         // If no search criteria, return all doctors
@@ -154,21 +160,6 @@ public class DoctorServiceImpl implements DoctorService {
         response.put("page", 0);
         response.put("size", doctors.size());
         response.put("totalElements", (long) doctors.size());
-        response.put("totalPages", 1);
-        response.put("isFirst", true);
-        response.put("isLast", true);
-        return response;
-    }
-
-    private Map<String, Object> buildSingleResultResponse(DocInfo doctor, String errorMessage) {
-        if (doctor == null) {
-            throw new RuntimeException(errorMessage);
-        }
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", List.of(mapToDTO(doctor)));
-        response.put("page", 0);
-        response.put("size", 1);
-        response.put("totalElements", 1L);
         response.put("totalPages", 1);
         response.put("isFirst", true);
         response.put("isLast", true);

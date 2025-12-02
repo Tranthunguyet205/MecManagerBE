@@ -130,7 +130,7 @@ public class DoctorController {
      * @return ApiResponse with list of doctors
      */
     @GetMapping
-    @Operation(summary = "Get doctors", description = "Retrieve doctors with optional search filters and pagination support. Search field searches name and email.")
+    @Operation(summary = "Get doctors", description = "Retrieve doctors with optional search filters and pagination support. Search field searches name and email. Can also search by practice certificate (CCHN) or license number.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Doctors retrieved successfully"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Doctor not found"),

@@ -14,10 +14,10 @@ public interface DocInfoRepository extends JpaRepository<DocInfo, Long> {
     DocInfo findByUserId( @Param("userId") Long userId );
     
     @Query("SELECT d FROM DocInfo d WHERE LOWER(d.practiceCertificateNo) LIKE LOWER(CONCAT('%', :practiceCertificateNo, '%'))")
-    DocInfo findByPracticeCertificateNo(@Param("practiceCertificateNo") String practiceCertificateNo);
+    List<DocInfo> findByPracticeCertificateNo(@Param("practiceCertificateNo") String practiceCertificateNo);
     
     @Query("SELECT d FROM DocInfo d WHERE LOWER(d.licenseNo) LIKE LOWER(CONCAT('%', :licenseNo, '%'))")
-    DocInfo findByLicenseNo(@Param("licenseNo") String licenseNo);
+    List<DocInfo> findByLicenseNo(@Param("licenseNo") String licenseNo);
 
     @Query("SELECT d FROM DocInfo d WHERE LOWER(d.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(d.email) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     List<DocInfo> findBySearchTerm(@Param("searchTerm") String searchTerm);
