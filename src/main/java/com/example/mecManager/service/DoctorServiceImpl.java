@@ -277,6 +277,9 @@ public class DoctorServiceImpl implements DoctorService {
                 .nationalIdUrl(docInfo.getNationalIdUrl())
                 .createdAt(docInfo.getCreatedAt())
                 .updatedAt(docInfo.getUpdatedAt())
+                .username(docInfo.getUser().getUsername())
+                .status(docInfo.getUser().getStatus().name())
+                .role(docInfo.getUser().getRole().name())
                 .build();
     }
 
